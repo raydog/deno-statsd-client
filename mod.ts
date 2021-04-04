@@ -6,7 +6,7 @@ let prev = Date.now();
 setInterval(
   () => {
     const now = Date.now();
-    c.timing("deno.timing", now - prev, { sampling: 0.5 });
+    c.adjustGauge("deno.gauge", Math.random() * 10 - 5, { sampling: 0.5 });
     prev = now;
   },
   200

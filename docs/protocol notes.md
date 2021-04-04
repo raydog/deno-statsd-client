@@ -61,9 +61,9 @@ Metric = Metric-Timing | Metric-Gauge-Rel | Metric-Gauge-Abs |
 
 Metric-Timing = Float-Pos, "|ms";
 Metric-Gauge-Rel = Sign, Float-Pos, "|g";
-Metric-Gauge-Abs = [ Float-Pos ], "|g";
+Metric-Gauge-Abs = Float-Pos, "|g";
 Metric-Set = [ String ], "|s";
-Metric-Count = [ [Sign], Float-Pos ], "|c";
+Metric-Count = [ Sign ], Float-Pos, "|c";
 
 Sample-Rate = "|@", Float-Sample;
 

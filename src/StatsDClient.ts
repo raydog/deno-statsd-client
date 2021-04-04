@@ -96,7 +96,7 @@ export class StatsDClient {
     this._queueData(data);
   }
 
-  
+
   // ms
   timing(key: string, ms: number, opts?: MetricOpts) {
     const sample = _getSampling(this.#rate, opts?.sampling);
@@ -109,8 +109,25 @@ export class StatsDClient {
   }
 
   // g
-  gauge(key: string, value: number) {
+  gauge(key: string, value: number, opts?: MetricOpts) {
+    const sample = _getSampling(this.#rate, opts?.sampling);
+    const tags = _getTags(this.#tags, opts?.tags);
+    if (sample < 1 && Math.random() < sample) {
+      return;
+    }
+    const data = metricFormats.buildAbsGaugeBody(key, value, sample, tags);
+    this._queueData(data);
+  }
 
+  // g
+  adjustGauge(key: string, delta: number, opts?: MetricOpts) {
+    const sample = _getSampling(this.#rate, opts?.sampling);
+    const tags = _getTags(this.#tags, opts?.tags);
+    if (sample < 1 && Math.random() < sample) {
+      return;
+    }
+    const data = metricFormats.buildRelGaugeBody(key, delta, sample, tags);
+    this._queueData(data);
   }
 
   // h

@@ -18,7 +18,7 @@ const BAD_CHAR_RE = /[;:#|\n]/;
  * @throws If an input is invalid.
  * @returns Data to be sent.
  */
- export function buildCountBody(key: string, val: number | undefined, sample: number, tags: TagType) {
+export function buildCountBody(key: string, val: number | undefined, sample: number, tags: TagType) {
   assertValidKey(key);
   assertValidTags(tags);
   return `${key}:${val ?? 1}|c${_sampleStr(sample)}${_tagStr(tags)}`;
@@ -36,11 +36,50 @@ const BAD_CHAR_RE = /[;:#|\n]/;
  * @throws If an input is invalid.
  * @returns Data to be sent.
  */
- export function buildTimingBody(key: string, val: number, sample: number, tags: TagType) {
+export function buildTimingBody(key: string, val: number, sample: number, tags: TagType) {
   assertValidKey(key);
   assertValidTags(tags);
   assertPosFloat(val);
   return `${key}:${val}|ms${_sampleStr(sample)}${_tagStr(tags)}`;
+}
+
+
+/**
+ * Produce the absolute "gauge" string that'd be sent over the wire.
+ * 
+ * @private
+ * @param key Metric key
+ * @param val Metric value (Must be positive.)
+ * @param sample Sample rate
+ * @param tags Tag set.
+ * @throws If an input is invalid.
+ * @returns Data to be sent.
+ */
+export function buildAbsGaugeBody(key: string, val: number, sample: number, tags: TagType) {
+  assertValidKey(key);
+  assertValidTags(tags);
+  assertPosFloat(val);
+  return `${key}:${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
+}
+
+
+/**
+ * Produce the relative "gauge" string that'd be sent over the wire.
+ * 
+ * @private
+ * @param key Metric key
+ * @param val Metric delta
+ * @param sample Sample rate
+ * @param tags Tag set.
+ * @throws If an input is invalid.
+ * @returns Data to be sent.
+ */
+ export function buildRelGaugeBody(key: string, val: number, sample: number, tags: TagType) {
+  assertValidKey(key);
+  assertValidTags(tags);
+  assertFloat(val);
+  const sign = (val >= 0) ? "+" : ""; // << Positive numbers need a forced sign
+  return `${key}:${sign}${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
 
@@ -59,7 +98,14 @@ export function assertValidKey(key: string) {
 
 export function assertPosFloat(val: number) {
   if (typeof val !== "number" || isNaN(val) || val < 0) {
-    throw new StatsDError(`Invalid value: ${val}`);
+    throw new StatsDError(`Must be number 0 or greater: ${val}`);
+  }
+}
+
+
+export function assertFloat(val: number) {
+  if (typeof val !== "number" || isNaN(val)) {
+    throw new StatsDError(`Must be number: ${val}`);
   }
 }
 
