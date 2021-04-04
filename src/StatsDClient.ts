@@ -7,6 +7,9 @@ import * as metricFormats from "./metricFormats.ts";
 
 type Tags = { [key: string]: string };
 
+/**
+ * StatsD client. Use this to send data to a StatsD-speaking backend.
+ */
 export class StatsDClient {
   #client: Client;
   #mtu: number;
@@ -17,21 +20,26 @@ export class StatsDClient {
   #buffer: Uint8Array;
   #idx = 0;
 
-  #rate: number;
-  #tags: Tags;
+  #globalOpts: Required<MetricOpts>;
+  #safeSampleRate: boolean;
 
-  // Proto note:
-  // key:num|type (@sample)
-  // So foo.bar:22|ms@0.1
-  // UTF-8 keys.
-
+  /**
+   * Build a new client. This client will have its own connection to the remote StatsD server.
+   * 
+   * If no config object is passed in, we'll 100% fall back on default settings. (localhost:8125, UDP, ...)
+   * 
+   * @param conf Settings.
+   */
   constructor(conf?: LibConfig) {
     this.#client = _connect(conf?.server);
     this.#mtu = conf?.mtu ?? 1500;
     this.#maxDelay = conf?.maxDelayMs ?? 1000;
     this.#buffer = new Uint8Array(this.#mtu);
-    this.#rate = conf?.sampling ?? 1.0;
-    this.#tags = conf?.globalTags ?? {};
+    this.#globalOpts = {
+      sampleRate: conf?.sampleRate ?? 1.0,
+      tags: conf?.globalTags ?? {},
+    };
+    this.#safeSampleRate = conf?.safeSampleRate ?? true;
   }
 
   // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
@@ -81,68 +89,174 @@ export class StatsDClient {
     }
   }
 
-  // c
+  /**
+   * Send a "count" metric. This is used to track the number of things.
+   * 
+   * @example
+   *   // Count the number of times a route was used:
+   *  client.count("routes.get_api_resource");
+   * 
+   * @example
+   *   // Count the number of items purchased:
+   *   client.count("store.widgets.purchased", order.items.length);
+   * 
+   * @param key  Metric key
+   * @param num  Number of things (Default is 1)
+   * @param opts Extra options
+   */
   count(key: string, num = 1, opts?: MetricOpts) {
-    const sample = _getSampling(this.#rate, opts?.sampling);
-    const tags = _getTags(this.#tags, opts?.tags);
-    if (sample < 1 && Math.random() < sample) {
-      return;
-    }
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      true,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
     const data = metricFormats.buildCountBody(key, num, sample, tags);
     this._queueData(data);
   }
 
-  // ms
+  /**
+   * Sends a "timing" metric, typically measured in milliseconds. The remote StatsD server will usually calculate other
+   * metrics based on these values. These metrics can include things like: min, max, average, mean90, etc...
+   * 
+   * While this metric type was originally intended only for timing measurements, it can really be used for any value
+   * where things like min, max, mean90, etc... would be useful.
+   * 
+   * @example
+   *   // Keep track of route response times:
+   *   client.timing("routes.get_api_resource.ok", Date.now() - start);
+   * 
+   * @param key Metric key
+   * @param ms  Measurement
+   * @param opts Extra options
+   */
   timing(key: string, ms: number, opts?: MetricOpts) {
-    const sample = _getSampling(this.#rate, opts?.sampling);
-    const tags = _getTags(this.#tags, opts?.tags);
-    if (sample < 1 && Math.random() < sample) {
-      return;
-    }
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      true,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
     const data = metricFormats.buildTimingBody(key, ms, sample, tags);
     this._queueData(data);
   }
 
-  // g
+  /**
+   * Sends a "gauge" metric. Gauges are point-in-time measurements, that are true, at this time. The StatsD server will
+   * keep gauges in memory, and will keep using them if a new value wasn't sent. Use this to track values that are
+   * absolutely true, at this point-in-time. This could include things like "number of items in a db table", or "bytes
+   * remaining in the main disk partition." Things like that.
+   * 
+   * @example
+   *   // Keep track of server disk usage:
+   *   client.gauge(`servers.${await Deno.hostname()}.diskPercent`, await getDiskPercent());
+   * 
+   * @example
+   *   // Keep track of items in a db table:
+   *   client.gauge("database.main.users", await userTable.count());
+   * 
+   * @param key   Metric key
+   * @param value Measurement
+   * @param opts  Extra options
+   */
   gauge(key: string, value: number, opts?: MetricOpts) {
-    const sample = _getSampling(this.#rate, opts?.sampling);
-    const tags = _getTags(this.#tags, opts?.tags);
-    if (sample < 1 && Math.random() < sample) {
-      return;
-    }
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      true,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
     const data = metricFormats.buildAbsGaugeBody(key, value, sample, tags);
     this._queueData(data);
   }
 
-  // g
+  /**
+   * Sends a relative "gauge" metric. A _relative_ gauge metric may reference a gauge value (an absolute measurement)
+   * but we aren't sending that exact measurement right now. We're just sending an adjustment value.
+   * 
+   * @example
+   *   // Adjust the total asset size after an upload:
+   *   client.adjustGauge("assets.size.overall", asset.byteLength);
+   * 
+   * @example
+   *   // Adjust the total number of users after a cancellation:
+   *   client.adjustGauge("users.count", -1);
+   * 
+   * @param key   Metric key
+   * @param delta Adjustment value
+   * @param opts  Extra options
+   */
   adjustGauge(key: string, delta: number, opts?: MetricOpts) {
-    const sample = _getSampling(this.#rate, opts?.sampling);
-    const tags = _getTags(this.#tags, opts?.tags);
-    if (sample < 1 && Math.random() < sample) {
-      return;
-    }
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      false,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
     const data = metricFormats.buildRelGaugeBody(key, delta, sample, tags);
     this._queueData(data);
   }
 
-  // h
-  histogram(key: string, value: number) {
-  }
-
-  // s (set?)
-  set(key: string, value: number) {
+  /**
+   * Sends a "set" metric. A set metric tracks the number of distinct values seen in StatsD over time. Use this to track
+   * things like the number of disctint users.
+   * 
+   * @example
+   *   // Track distinct authenticated users
+   *   client.unique("users.distinct", user.id);
+   * 
+   * @param key   Metric key
+   * @param value Identifying value
+   * @param opts  Extra options
+   */
+  unique(key: string, value: number, opts?: MetricOpts) {
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      false,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
+    const data = metricFormats.buildSetBody(key, value, sample, tags);
+    this._queueData(data);
   }
 }
 
-function _getSampling(fallback: number, metric: number | undefined) {
-  return metric ?? fallback;
+// Get the effective sampling rate for this metric:
+function _getSampling(
+  globalOpts: Required<MetricOpts>,
+  metricOpts: MetricOpts | undefined,
+  isSafe: boolean,
+  forceSafe: boolean,
+) {
+  // If this is a non-safe metric in safe mode, always send:
+  if (!isSafe && forceSafe) return 1.0;
+  return metricOpts?.sampleRate ?? globalOpts.sampleRate;
 }
 
-function _getTags(globalTags: Tags, metricTags: Tags | undefined): Tags {
+// Get the full tag set for this metric:
+function _getTags(
+  globalOpts: Required<MetricOpts>,
+  metricOpts: MetricOpts | undefined,
+): Tags {
   return {
-    ...globalTags,
-    ...metricTags,
+    ...globalOpts.tags,
+    ...metricOpts?.tags,
   };
+}
+
+// Return true if we should send this metric, based on the sampling rates, and the metric in question:
+function _doSampling(rate: number): boolean {
+  return (rate >= 1 || Math.random() < rate);
 }
 
 function _connect(info: LibConfig["server"]): Client {

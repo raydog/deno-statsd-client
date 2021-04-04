@@ -21,7 +21,7 @@ export function buildCountBody(
   val: number | undefined,
   sample: number,
   tags: TagType,
-) {
+): string {
   assertValidKey(key);
   assertValidTags(tags);
   return `${key}:${val ?? 1}|c${_sampleStr(sample)}${_tagStr(tags)}`;
@@ -43,7 +43,7 @@ export function buildTimingBody(
   val: number,
   sample: number,
   tags: TagType,
-) {
+): string {
   assertValidKey(key);
   assertValidTags(tags);
   assertPosFloat(val);
@@ -66,7 +66,7 @@ export function buildAbsGaugeBody(
   val: number,
   sample: number,
   tags: TagType,
-) {
+): string {
   assertValidKey(key);
   assertValidTags(tags);
   assertPosFloat(val);
@@ -89,12 +89,34 @@ export function buildRelGaugeBody(
   val: number,
   sample: number,
   tags: TagType,
-) {
+): string {
   assertValidKey(key);
   assertValidTags(tags);
   assertFloat(val);
   const sign = (val >= 0) ? "+" : ""; // << Positive numbers need a forced sign
   return `${key}:${sign}${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
+}
+
+/**
+ * Produce the "set" string that'd be sent over the wire.
+ * 
+ * @private
+ * @param key Metric key
+ * @param val Set value
+ * @param sample Sample rate
+ * @param tags Tag set.
+ * @throws If an input is invalid.
+ * @returns Data to be sent.
+ */
+export function buildSetBody(
+  key: string,
+  val: string | number,
+  sample: number,
+  tags: TagType,
+): string {
+  assertValidKey(key);
+  assertValidTags(tags);
+  return `${key}:${val}|s${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
 // Ensures that a string is ok:
