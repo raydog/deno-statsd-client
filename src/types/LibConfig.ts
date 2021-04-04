@@ -1,10 +1,9 @@
 export type LibConfig = {
-  
   /**
    * Information on how to connect to a Server.
    */
-  server?: UDPConfig,
-  
+  server?: UDPConfig;
+
   /**
    * The Maximum Transmission Unit for the network connection.
    * 
@@ -16,7 +15,7 @@ export type LibConfig = {
    * frames enabled might be able to bump this value higher, like to 9000 bytes, but worse networks (like if these
    * packets are routed through the wider internet) might need to reduce the MTU to 512.
    */
-  mtu?: number,
+  mtu?: number;
 
   /**
    * The sampling rate we'll use for metrics. This should be a value between 0 and 1, inclusive.
@@ -28,22 +27,22 @@ export type LibConfig = {
    * 
    * Default value is 1. (So no random sampling)
    */
-  sampling?: number,
-  
+  sampling?: number;
+
   /**
    * When we get a metric to send, we'll wait (at most) this number of milliseconds before sending. We may decide to
    * send the data sooner, if the total amount of batched data exceeds the MTU size.
    * 
    * Default value is 1000. (1 second)
    */
-  maxDelayMs?: number,
-  
+  maxDelayMs?: number;
+
   /**
    * What StatsD dialect the server speaks.
    * 
    * Default value is `Dialect.StatsD`.
    */
-  dialect?: Dialect,
+  dialect?: Dialect;
 
   /**
    * Tags are key-value pairs that are appended to each metric.
@@ -53,29 +52,28 @@ export type LibConfig = {
    * If the dialect is `Dialect.Datadog`, we will attempt to read the DD_ENTITY_ID env var, and assign it to the
    * "dd.internal.entity_id" tag automatically.
    */
-  globalTags?: { [key: string]: string },
-
+  globalTags?: { [key: string]: string };
 };
 
 /**
  * Information to connect to a UDP StatsD server.
  */
 type UDPConfig = {
-  proto: "udp",
+  proto: "udp";
 
   /**
    * The server that we'll send our stats to.
    * 
    * Default value is "localhost".
    */
-   host?: string,
+  host?: string;
 
-   /**
+  /**
     * The server port number that we'll connect to.
     * 
     * Default value is 8125.
     */
-   port?: number,
+  port?: number;
 };
 
 export enum Dialect {
@@ -93,7 +91,6 @@ export enum Dialect {
    */
   Datadog,
 }
-
 
 /*
 Fast Ethernet (1432) - This is most likely for Intranets.

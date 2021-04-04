@@ -5,12 +5,9 @@ import { StatsDError } from "./StatsDError.ts";
 import { MetricOpts } from "./types/MetricOpts.ts";
 import * as metricFormats from "./metricFormats.ts";
 
-
 type Tags = { [key: string]: string };
 
-
 export class StatsDClient {
-
   #client: Client;
   #mtu: number;
   #maxDelay: number;
@@ -22,7 +19,7 @@ export class StatsDClient {
 
   #rate: number;
   #tags: Tags;
-  
+
   // Proto note:
   // key:num|type (@sample)
   // So foo.bar:22|ms@0.1
@@ -37,7 +34,6 @@ export class StatsDClient {
     this.#tags = conf?.globalTags ?? {};
   }
 
-
   // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
   private _queueData(data: string) {
     const pre = this.#idx ? "\n" : "";
@@ -45,7 +41,9 @@ export class StatsDClient {
     const buflen = this.#buffer.byteLength;
 
     if (enc.byteLength > this.#buffer.byteLength) {
-      throw new StatsDError(`Metric is too large for this MTU: ${enc.byteLength} > ${buflen}`);
+      throw new StatsDError(
+        `Metric is too large for this MTU: ${enc.byteLength} > ${buflen}`,
+      );
     }
 
     if (this.#idx + enc.byteLength > buflen) {
@@ -55,17 +53,16 @@ export class StatsDClient {
 
     this.#buffer.set(enc, this.#idx);
     this.#idx += enc.byteLength;
-    
+
     // Set flush timeout.
     if (!this.#timeout) {
       // TODO: maxDelay == 0 is an immediate send?
       this.#timeout = setTimeout(
         () => this._flushData(),
-        this.#maxDelay
+        this.#maxDelay,
       );
     }
   }
-
 
   // Flush the metric buffer to the StatsD server:
   private _flushData() {
@@ -79,11 +76,10 @@ export class StatsDClient {
       this.#idx = 0;
       this.#client.write(region)
         .catch(
-          err => console.log("FAIL", err.message)
+          (err) => console.log("FAIL", err.message),
         );
     }
   }
-  
 
   // c
   count(key: string, num = 1, opts?: MetricOpts) {
@@ -95,7 +91,6 @@ export class StatsDClient {
     const data = metricFormats.buildCountBody(key, num, sample, tags);
     this._queueData(data);
   }
-
 
   // ms
   timing(key: string, ms: number, opts?: MetricOpts) {
@@ -132,12 +127,10 @@ export class StatsDClient {
 
   // h
   histogram(key: string, value: number) {
-
   }
 
   // s (set?)
   set(key: string, value: number) {
-
   }
 }
 

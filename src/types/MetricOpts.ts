@@ -1,5 +1,4 @@
 export type MetricOpts = {
-  
-  sampling?: number,
-  tags?: { [key: string]: string },
-}
+  sampling?: number;
+  tags?: { [key: string]: string };
+};
