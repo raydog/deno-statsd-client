@@ -15,4 +15,4 @@ export interface MetricOpts {
    * Tags are key-value pairs that are appended to each metric.
    */
   tags?: Tags;
-};
+}

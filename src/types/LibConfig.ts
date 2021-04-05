@@ -43,10 +43,7 @@ export interface LibConfig {
   /**
    * Tags are key-value pairs that are appended to each metric.
    * 
-   * Default value is usually `{}`.
-   * 
-   * If the dialect is `Dialect.Datadog`, we will attempt to read the DD_ENTITY_ID env var, and assign it to the
-   * "dd.internal.entity_id" tag automatically, so long as the correct permissions have been granted.
+   * @default {}
    */
   globalTags?: Tags;
 }
