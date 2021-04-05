@@ -12,7 +12,10 @@ Deno.test("fieldValidations accepts ok keys", () => {
 });
 
 Deno.test("fieldValidations rejects bad keys", () => {
-  asserts.assertThrows(() => fieldValidations.assertValidKey("a:b"), StatsDError);
+  asserts.assertThrows(
+    () => fieldValidations.assertValidKey("a:b"),
+    StatsDError,
+  );
   asserts.assertThrows(
     () => fieldValidations.assertValidKey("lol|phooie"),
     StatsDError,
@@ -44,10 +47,16 @@ Deno.test("fieldValidations accepts ok positive floats", () => {
 
 Deno.test("fieldValidations rejects bad positive floats", () => {
   asserts.assertThrows(() => fieldValidations.assertPosFloat(-1), StatsDError);
-  asserts.assertThrows(() => fieldValidations.assertPosFloat(-0.0001), StatsDError);
+  asserts.assertThrows(
+    () => fieldValidations.assertPosFloat(-0.0001),
+    StatsDError,
+  );
   asserts.assertThrows(() => fieldValidations.assertPosFloat(NaN), StatsDError);
   // @ts-expect-error Testing that strings are rejected:
-  asserts.assertThrows(() => fieldValidations.assertPosFloat("0.1"), StatsDError);
+  asserts.assertThrows(
+    () => fieldValidations.assertPosFloat("0.1"),
+    StatsDError,
+  );
 });
 
 Deno.test("fieldValidations accepts ok floats", () => {
@@ -84,9 +93,15 @@ Deno.test("fieldValidations accepts ok tags", () => {
 
 Deno.test("fieldValidations rejects bad tags", () => {
   // @ts-expect-error Testing that strings are rejected:
-  asserts.assertThrows(() => fieldValidations.assertValidTags("no"), StatsDError);
+  asserts.assertThrows(
+    () => fieldValidations.assertValidTags("no"),
+    StatsDError,
+  );
   // @ts-expect-error Testing null:
-  asserts.assertThrows(() => fieldValidations.assertValidTags(null), StatsDError);
+  asserts.assertThrows(
+    () => fieldValidations.assertValidTags(null),
+    StatsDError,
+  );
   asserts.assertThrows(
     () => fieldValidations.assertValidTags({ "bad:key": "123" }),
     StatsDError,

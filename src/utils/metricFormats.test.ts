@@ -2,12 +2,18 @@ import { asserts } from "../../testDeps.ts";
 import * as metricFormats from "./metricFormats.ts";
 
 Deno.test("metricFormats can build count metrics", () => {
-  asserts.assertEquals(metricFormats.buildCountBody("a.b", 1, 1, {}), "a.b:1|c");
+  asserts.assertEquals(
+    metricFormats.buildCountBody("a.b", 1, 1, {}),
+    "a.b:1|c",
+  );
   asserts.assertEquals(
     metricFormats.buildCountBody("a.b", undefined, 1, {}),
     "a.b:1|c",
   );
-  asserts.assertEquals(metricFormats.buildCountBody("a.b", 1, 0.5, {}), "a.b:1|c|@0.5");
+  asserts.assertEquals(
+    metricFormats.buildCountBody("a.b", 1, 0.5, {}),
+    "a.b:1|c|@0.5",
+  );
   asserts.assertEquals(
     metricFormats.buildCountBody("a.b", 1, 1, { foo: "bar" }),
     "a.b:1|c|#foo:bar",
@@ -23,11 +29,17 @@ Deno.test("metricFormats can build count metrics", () => {
     metricFormats.buildCountBody("a.b", 12, 0.25, { foo: "bar", empty: "" }),
     "a.b:12|c|@0.25|#foo:bar",
   );
-  asserts.assertEquals(metricFormats.buildCountBody("a.b", -12, 0, {}), "a.b:-12|c|@0");
+  asserts.assertEquals(
+    metricFormats.buildCountBody("a.b", -12, 0, {}),
+    "a.b:-12|c|@0",
+  );
 });
 
 Deno.test("metricFormats can build timing metrics", () => {
-  asserts.assertEquals(metricFormats.buildTimingBody("a.b", 10, 1, {}), "a.b:10|ms");
+  asserts.assertEquals(
+    metricFormats.buildTimingBody("a.b", 10, 1, {}),
+    "a.b:10|ms",
+  );
   asserts.assertEquals(
     metricFormats.buildTimingBody("a.b", 15, 0.5, {}),
     "a.b:15|ms|@0.5",
@@ -80,7 +92,10 @@ Deno.test("metricFormats can build relative gauge metrics", () => {
     metricFormats.buildRelGaugeBody("a.b", 10.2, 1, {}),
     "a.b:+10.2|g",
   );
-  asserts.assertEquals(metricFormats.buildRelGaugeBody("a.b", 0, 1, {}), "a.b:+0|g");
+  asserts.assertEquals(
+    metricFormats.buildRelGaugeBody("a.b", 0, 1, {}),
+    "a.b:+0|g",
+  );
   asserts.assertEquals(
     metricFormats.buildRelGaugeBody("a.b", -15, 0.5, {}),
     "a.b:-15|g|@0.5",
@@ -103,7 +118,10 @@ Deno.test("metricFormats can build relative gauge metrics", () => {
 });
 
 Deno.test("metricFormats can build set metrics", () => {
-  asserts.assertEquals(metricFormats.buildSetBody("a.b", 10.2, 1, {}), "a.b:10.2|s");
+  asserts.assertEquals(
+    metricFormats.buildSetBody("a.b", 10.2, 1, {}),
+    "a.b:10.2|s",
+  );
   asserts.assertEquals(metricFormats.buildSetBody("a.b", 0, 1, {}), "a.b:0|s");
   asserts.assertEquals(
     metricFormats.buildSetBody("a.b", "foobar", 0.5, {}),
