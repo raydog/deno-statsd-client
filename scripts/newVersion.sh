@@ -16,7 +16,7 @@ DENO_LIB_URL="https://deno.land/x/statsd@$VERSION/mod.ts"
 sed -Ei 's|https://deno.land/x/statsd@(.*?)/mod.ts|'$DENO_LIB_URL'|' "$PWD/../README.md"
 
 # Make a release commit:
-git commit --allow-empty -m "Release: $VERSION"
+git commit --allow-empty -am "Release: $VERSION"
 
 # Tag and push:
 git tag -a "$VERSION" -m "Release $VERSION"

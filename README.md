@@ -6,7 +6,7 @@ Since Deno's UDP stuff is still unstable, you'll need to use `--unstable` to use
 a UDP server. Also, you'll need to enable network access with `--allow-net`.
 
 ```typescript
-import { StatsDClient } from "https://deno.land/x/statsd@0.1.1/mod.ts";
+import { StatsDClient } from "https://deno.land/x/statsd@0.1.2/mod.ts";
 
 const client = new StatsDClient({
   server: {
