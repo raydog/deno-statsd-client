@@ -1,3 +1,5 @@
+import { Tags } from "./Tags.ts";
+
 export type MetricOpts = {
   /**
    * The sampling rate we'll use for metrics. This should be a value between 0 and 1, inclusive.
@@ -12,5 +14,5 @@ export type MetricOpts = {
   /**
    * Tags are key-value pairs that are appended to each metric.
    */
-  tags?: { [key: string]: string };
+  tags?: Tags;
 };

@@ -1,9 +1,6 @@
-import { StatsDError } from "./StatsDError.ts";
+import * as validate from "./fieldValidations.ts";
 
 type TagType = { [key: string]: string };
-
-// If this matches, reject the key:
-const BAD_CHAR_RE = /[;:#|\n]/;
 
 /**
  * Produce the "count" string that'd be sent over the wire.
@@ -22,9 +19,11 @@ export function buildCountBody(
   sample: number,
   tags: TagType,
 ): string {
-  assertValidKey(key);
-  assertValidTags(tags);
-  return `${key}:${val ?? 1}|c${_sampleStr(sample)}${_tagStr(tags)}`;
+  val ??= 1;
+  validate.assertValidKey(key);
+  validate.assertValidTags(tags);
+  validate.assertFloat(val);
+  return `${key}:${val}|c${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
 /**
@@ -44,9 +43,9 @@ export function buildTimingBody(
   sample: number,
   tags: TagType,
 ): string {
-  assertValidKey(key);
-  assertValidTags(tags);
-  assertPosFloat(val);
+  validate.assertValidKey(key);
+  validate.assertValidTags(tags);
+  validate.assertPosFloat(val);
   return `${key}:${val}|ms${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
@@ -67,9 +66,9 @@ export function buildAbsGaugeBody(
   sample: number,
   tags: TagType,
 ): string {
-  assertValidKey(key);
-  assertValidTags(tags);
-  assertPosFloat(val);
+  validate.assertValidKey(key);
+  validate.assertValidTags(tags);
+  validate.assertPosFloat(val);
   return `${key}:${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
@@ -90,9 +89,9 @@ export function buildRelGaugeBody(
   sample: number,
   tags: TagType,
 ): string {
-  assertValidKey(key);
-  assertValidTags(tags);
-  assertFloat(val);
+  validate.assertValidKey(key);
+  validate.assertValidTags(tags);
+  validate.assertFloat(val);
   const sign = (val >= 0) ? "+" : ""; // << Positive numbers need a forced sign
   return `${key}:${sign}${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
 }
@@ -114,41 +113,9 @@ export function buildSetBody(
   sample: number,
   tags: TagType,
 ): string {
-  assertValidKey(key);
-  assertValidTags(tags);
+  validate.assertValidKey(key);
+  validate.assertValidTags(tags);
   return `${key}:${val}|s${_sampleStr(sample)}${_tagStr(tags)}`;
-}
-
-// Ensures that a string is ok:
-function isValidKey(key: string): boolean {
-  return !BAD_CHAR_RE.test(key);
-}
-
-export function assertValidKey(key: string) {
-  if (!isValidKey(key)) {
-    throw new StatsDError(`Invalid key: ${key}`);
-  }
-}
-
-export function assertPosFloat(val: number) {
-  if (typeof val !== "number" || isNaN(val) || val < 0) {
-    throw new StatsDError(`Must be number 0 or greater: ${val}`);
-  }
-}
-
-export function assertFloat(val: number) {
-  if (typeof val !== "number" || isNaN(val)) {
-    throw new StatsDError(`Must be number: ${val}`);
-  }
-}
-
-export function assertValidTags(tags: TagType) {
-  for (const key of Object.keys(tags)) {
-    const val = tags[key];
-    if (!isValidKey(key) || !isValidKey(val)) {
-      throw new StatsDError(`Invalid tag: ${key}: ${val}`);
-    }
-  }
 }
 
 // Produce the sample string for the sample-rate:
@@ -160,6 +127,7 @@ function _sampleStr(sample: number): string {
 // Produce the tag string for the tag object:
 function _tagStr(tags: TagType): string {
   const str = Object.keys(tags)
+    .filter((key) => tags[key])
     .map((key) => `${key}:${tags[key]}`)
     .join(",");
   return (str) ? "|#" + str : "";
