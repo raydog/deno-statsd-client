@@ -98,13 +98,13 @@ client.unique("users.unique", user.id);
 
   Send a "count" metric. This is used to track the number of things.
 
-      ```typescript
-      // Count the number of times a route was used:
-      client.count("routes.get_api_resource");
+    ```typescript
+    // Count the number of times a route was used:
+    client.count("routes.get_api_resource");
 
-      // Count the number of items purchased:
-      client.count("store.widgets.purchased", order.items.length);
-      ```
+    // Count the number of items purchased:
+    client.count("store.widgets.purchased", order.items.length);
+    ```
 
 - `timing(key: string, ms: number, opts?: MetricOpts)`
 
@@ -116,10 +116,10 @@ client.unique("users.unique", user.id);
   it can really be used for any value where things like min, max, mean90, etc...
   would be useful.
 
-      ```typescript
-      // Keep track of route response times:
-      client.timing("routes.get_api_resource.ok", Date.now() - start);
-      ```
+    ```typescript
+    // Keep track of route response times:
+    client.timing("routes.get_api_resource.ok", Date.now() - start);
+    ```
 
 - `gauge(key: string, value: number, opts?: MetricOpts)`
 
@@ -130,29 +130,29 @@ client.unique("users.unique", user.id);
   of items in a db table", or "bytes remaining in the main disk partition."
   Things like that.
 
-      ```typescript
-      // Keep track of server disk usage:
-      client.gauge(
-        `servers.${await Deno.hostname()}.diskPercent`,
-        await getDiskPercent(),
-      );
+    ```typescript
+    // Keep track of server disk usage:
+    client.gauge(
+      `servers.${await Deno.hostname()}.diskPercent`,
+      await getDiskPercent(),
+    );
 
-      // Keep track of items in a db table:
-      client.gauge("database.main.users", await userTable.count());
-      ```
+    // Keep track of items in a db table:
+    client.gauge("database.main.users", await userTable.count());
+    ```
 
 - `adjustGauge(key: string, delta: number, opts?: MetricOpts)` Sends a relative
   "gauge" metric. A _relative_ gauge metric may reference a gauge value (an
   absolute measurement) but we aren't sending that exact measurement right now.
   We're just sending an adjustment value.
 
-      ```typescript
-      // Adjust the total asset size after an upload:
-      client.adjustGauge("assets.size.overall", asset.byteLength);
+    ```typescript
+    // Adjust the total asset size after an upload:
+    client.adjustGauge("assets.size.overall", asset.byteLength);
 
-      // Adjust the total number of users after a cancellation:
-      client.adjustGauge("users.count", -1);
-      ```
+    // Adjust the total number of users after a cancellation:
+    client.adjustGauge("users.count", -1);
+    ```
 
 - `unique(key: string, value: number | string, opts?: MetricOpts)`
 
@@ -160,10 +160,10 @@ client.unique("users.unique", user.id);
   in StatsD over time. Use this to track things like the number of disctint
   users.
 
-      ```typescript
-      // Track distinct authenticated users
-      client.unique("users.distinct", user.id);
-      ```
+    ```typescript
+    // Track distinct authenticated users
+    client.unique("users.distinct", user.id);
+    ```
 
 - `async close(): Promise<void>`
 
