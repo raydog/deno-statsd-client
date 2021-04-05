@@ -1,9 +1,9 @@
 import { Client } from "./types/Client.ts";
 import { UDPClient } from "./network/UDPClient.ts";
 import { LibConfig } from "./types/LibConfig.ts";
-import { StatsDError } from "./StatsDError.ts";
 import { MetricOpts } from "./types/MetricOpts.ts";
-import * as metricFormats from "./metricFormats.ts";
+import * as metricFormats from "./utils/metricFormats.ts";
+import { StatsDError } from "./StatsDError.ts";
 
 type Tags = { [key: string]: string };
 
@@ -11,10 +11,18 @@ type Tags = { [key: string]: string };
  * StatsD client. Use this to send data to a StatsD-speaking backend.
  */
 export class StatsDClient {
-  #client: Client;
+  #client: Client | null;
 
   #globalOpts: Required<MetricOpts>;
   #safeSampleRate: boolean;
+
+  // Returns the client. Used to implement a shutdown state:
+  private getClient(): Client {
+    if (!this.#client) {
+      throw new StatsDError("Client is closed");
+    }
+    return this.#client;
+  }
 
   /**
    * Build a new client. This client will have its own connection to the remote StatsD server.
@@ -49,6 +57,7 @@ export class StatsDClient {
    * @param opts Extra options
    */
   count(key: string, num = 1, opts?: MetricOpts) {
+    const client = this.getClient();
     const sample = _getSampling(
       this.#globalOpts,
       opts,
@@ -58,7 +67,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildCountBody(key, num, sample, tags);
-    this.#client.queueData(data);
+    client.queueData(data);
   }
 
   /**
@@ -77,6 +86,7 @@ export class StatsDClient {
    * @param opts Extra options
    */
   timing(key: string, ms: number, opts?: MetricOpts) {
+    const client = this.getClient();
     const sample = _getSampling(
       this.#globalOpts,
       opts,
@@ -86,7 +96,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildTimingBody(key, ms, sample, tags);
-    this.#client.queueData(data);
+    client.queueData(data);
   }
 
   /**
@@ -108,6 +118,7 @@ export class StatsDClient {
    * @param opts  Extra options
    */
   gauge(key: string, value: number, opts?: MetricOpts) {
+    const client = this.getClient();
     const sample = _getSampling(
       this.#globalOpts,
       opts,
@@ -117,7 +128,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildAbsGaugeBody(key, value, sample, tags);
-    this.#client.queueData(data);
+    client.queueData(data);
   }
 
   /**
@@ -137,6 +148,7 @@ export class StatsDClient {
    * @param opts  Extra options
    */
   adjustGauge(key: string, delta: number, opts?: MetricOpts) {
+    const client = this.getClient();
     const sample = _getSampling(
       this.#globalOpts,
       opts,
@@ -146,7 +158,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildRelGaugeBody(key, delta, sample, tags);
-    this.#client.queueData(data);
+    client.queueData(data);
   }
 
   /**
@@ -161,7 +173,8 @@ export class StatsDClient {
    * @param value Identifying value
    * @param opts  Extra options
    */
-  unique(key: string, value: number, opts?: MetricOpts) {
+  unique(key: string, value: number | string, opts?: MetricOpts) {
+    const client = this.getClient();
     const sample = _getSampling(
       this.#globalOpts,
       opts,
@@ -171,7 +184,18 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildSetBody(key, value, sample, tags);
-    this.#client.queueData(data);
+    client.queueData(data);
+  }
+
+  /**
+   * Will flush all pending metrics, and close all open sockets.
+   * 
+   * Any attempts to use this client after close() should error.
+   */
+  async close(): Promise<void> {
+    const client = this.getClient();
+    await client.close();
+    this.#client = null;
   }
 }
 

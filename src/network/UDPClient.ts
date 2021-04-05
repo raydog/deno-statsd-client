@@ -64,7 +64,7 @@ export class UDPClient implements Client {
   }
 
   // Flush the metric buffer to the StatsD server:
-  private _flushData() {
+  private async _flushData() {
     if (this.#timeout != null) {
       clearTimeout(this.#timeout);
       this.#timeout = null;
@@ -73,7 +73,7 @@ export class UDPClient implements Client {
       const region = this.#buffer.subarray(0, this.#idx);
       this.#buffer = new Uint8Array(this.#mtu);
       this.#idx = 0;
-      this._write(region)
+      await this._write(region)
         .catch(
           // TODO: Somehow pass async errors back through the main library
           (err) => console.log("FAIL", err.message),
@@ -93,8 +93,9 @@ export class UDPClient implements Client {
     }
   }
 
-  close() {
+  async close() {
     if (!this.#conn) return;
+    await this._flushData();
     this.#conn.close();
   }
 }

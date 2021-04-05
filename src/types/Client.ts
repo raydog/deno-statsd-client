@@ -12,5 +12,5 @@ export interface Client {
   /**
    * Will shut down the network layer.
    */
-  close(): void;
+  close(): Promise<void>;
 }
