@@ -11,4 +11,4 @@ echo "Releasing as: $VERSION"
 
 git commit --allow-empty -m "Release: $VERSION"
 git tag -a "$VERSION" -m "Release $VERSION"
-git push --tags
+git push && git push --tags
