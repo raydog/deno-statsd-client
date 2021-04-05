@@ -41,13 +41,6 @@ export interface LibConfig {
   maxDelayMs?: number;
 
   /**
-   * What StatsD dialect the server speaks.
-   * 
-   * Default value is `Dialect.StatsD`.
-   */
-  dialect?: Dialect;
-
-  /**
    * Tags are key-value pairs that are appended to each metric.
    * 
    * Default value is usually `{}`.
@@ -94,25 +87,3 @@ interface UDPConfig {
    */
   mtu?: number;
 }
-
-export enum Dialect {
-  /**
-   * StatsD dialect supports the functionality present in the Etsy reference server.
-   * - Histogram metrics will be sent as timing metrics.
-   * - Tags will be ignored.
-   */
-  StatsD,
-
-  /**
-   * Datadog dialect supports feature present in the DogStatsD server.
-   * - Histograms are supported.
-   * - Tags are supported.
-   */
-  Datadog,
-}
-
-/*
-Fast Ethernet (1432) - This is most likely for Intranets.
-Gigabit Ethernet (8932) - Jumbo frames can make use of this feature much more efficient.
-Commodity Internet (512) - If you are routing over the internet a value in this range will be reasonable. You might be able to go higher, but you are at the mercy of all the hops in your route.
-*/
