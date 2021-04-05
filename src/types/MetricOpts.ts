@@ -1,6 +1,6 @@
 import { Tags } from "./Tags.ts";
 
-export type MetricOpts = {
+export interface MetricOpts {
   /**
    * The sampling rate we'll use for metrics. This should be a value between 0 and 1, inclusive.
    * 

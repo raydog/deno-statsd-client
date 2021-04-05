@@ -54,7 +54,7 @@ export interface LibConfig {
 /**
  * Information to connect to a UDP StatsD server.
  */
-interface UDPConfig {
+export interface UDPConfig {
   proto: "udp";
 
   /**
