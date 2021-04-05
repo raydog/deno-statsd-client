@@ -52,8 +52,8 @@ Deno.test("fieldValidations rejects bad positive floats", () => {
     StatsDError,
   );
   asserts.assertThrows(() => fieldValidations.assertPosFloat(NaN), StatsDError);
-  // @ts-expect-error Testing that strings are rejected:
   asserts.assertThrows(
+    // @ts-expect-error Testing that strings are rejected:
     () => fieldValidations.assertPosFloat("0.1"),
     StatsDError,
   );
@@ -92,13 +92,13 @@ Deno.test("fieldValidations accepts ok tags", () => {
 });
 
 Deno.test("fieldValidations rejects bad tags", () => {
-  // @ts-expect-error Testing that strings are rejected:
   asserts.assertThrows(
+    // @ts-expect-error Testing that strings are rejected:
     () => fieldValidations.assertValidTags("no"),
     StatsDError,
   );
-  // @ts-expect-error Testing null:
   asserts.assertThrows(
+    // @ts-expect-error Testing null:
     () => fieldValidations.assertValidTags(null),
     StatsDError,
   );
