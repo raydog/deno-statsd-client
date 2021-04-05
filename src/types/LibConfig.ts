@@ -80,8 +80,8 @@ interface UDPConfig {
    * 
    * 1500 bytes is usually safe enough for most server networks. Fancy networks that have Jumbo Frames enabled might be
    * able to bump this value higher, like to 8932 bytes, but worse networks (like if these packets are routed through
-   * the wider internet) might need to reduce the MTU to 512. It's all down to the routers that these packets get routed
-   * through, and how they were configured.
+   * the wider internet) might need to reduce the MTU to 512. It all depends on the routers that these packets get
+   * routed through, and how they were configured.
    * 
    * @default 1500 (Enough bytes for most server networks)
    */
