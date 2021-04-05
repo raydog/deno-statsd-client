@@ -5,9 +5,9 @@
  */
 export interface Client {
   /**
-   * Will push a line of data onto the pile.
+   * Throw a new metric onto the pile.
    */
-  write(data: Uint8Array): Promise<void>;
+  queueData(metric: string): void;
 
   /**
    * Will shut down the network layer.

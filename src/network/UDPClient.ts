@@ -1,6 +1,8 @@
 import { Client } from "../types/Client.ts";
 import { StatsDError } from "../StatsDError.ts";
 
+const encoder: TextEncoder = new TextEncoder();
+
 /**
  * Client used to send data over UDP.
  * 
@@ -8,46 +10,83 @@ import { StatsDError } from "../StatsDError.ts";
  */
 export class UDPClient implements Client {
   #addr: Deno.NetAddr;
-  #conn: Deno.DatagramConn | null = null;
+  #conn: Deno.DatagramConn;
+
+  #mtu: number;
+  #maxDelay: number;
+
+  #timeout: number | null = null;
+  #buffer: Uint8Array;
+  #idx = 0;
 
   // Simple constructor:
-  constructor(host: string, port: number) {
+  constructor(host: string, port: number, mtu: number, maxDelay: number) {
     this.#addr = {
       transport: "udp",
       hostname: host,
       port: port,
     };
-    this.connect();
+    this.#conn = _connectUDP(this.#addr);
+
+    this.#mtu = mtu;
+    this.#maxDelay = maxDelay;
+    this.#buffer = new Uint8Array(this.#mtu);
   }
 
-  /**
-   * Attempt to connect to the correct server. Does nothing if already connected.
-   * The raw Datagram connection is returned, to avoid TS nullability issues.
-   */
-  private connect(): Deno.DatagramConn {
-    if (!Deno.listenDatagram) {
+  // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
+  queueData(data: string) {
+    const pre = this.#idx ? "\n" : "";
+    let enc = encoder.encode(pre + data);
+    const buflen = this.#buffer.byteLength;
+
+    if (enc.byteLength > this.#buffer.byteLength) {
       throw new StatsDError(
-        "Cannot connect to UDP. Try enabling unstable APIs with '--unstable'",
+        `Metric is too large for this MTU: ${enc.byteLength} > ${buflen}`,
       );
     }
-    if (this.#conn) {
-      // Already connected
-      return this.#conn;
+
+    if (this.#idx + enc.byteLength > buflen) {
+      this._flushData();
+      enc = enc.subarray(1); // Don't need the \n anymore
     }
-    return this.#conn = Deno.listenDatagram({
-      hostname: "0.0.0.0", // << Unrouteable
-      port: 0, // << Whatever port
-      transport: "udp",
-    });
+
+    this.#buffer.set(enc, this.#idx);
+    this.#idx += enc.byteLength;
+
+    // Set flush timeout.
+    if (!this.#timeout) {
+      // TODO: maxDelay == 0 is an immediate send?
+      this.#timeout = setTimeout(
+        () => this._flushData(),
+        this.#maxDelay,
+      );
+    }
   }
 
-  async write(data: Uint8Array): Promise<void> {
-    const conn = this.connect();
-    const num = await conn.send(data, this.#addr);
+  // Flush the metric buffer to the StatsD server:
+  private _flushData() {
+    if (this.#timeout != null) {
+      clearTimeout(this.#timeout);
+      this.#timeout = null;
+    }
+    if (this.#idx) {
+      const region = this.#buffer.subarray(0, this.#idx);
+      this.#buffer = new Uint8Array(this.#mtu);
+      this.#idx = 0;
+      this._write(region)
+        .catch(
+          // TODO: Somehow pass async errors back through the main library
+          (err) => console.log("FAIL", err.message),
+        );
+    }
+  }
 
-    console.log("<".repeat(60));
-    console.log(new TextDecoder().decode(data));
-    console.log(">".repeat(60));
+  private async _write(data: Uint8Array): Promise<void> {
+    const num = await this.#conn.send(data, this.#addr);
+
+    // console.log("<".repeat(60));
+    // console.log(new TextDecoder().decode(data));
+    // console.log(">".repeat(60));
 
     if (num < 0) {
       throw new StatsDError("Datagram rejected by kernel.");
@@ -58,4 +97,17 @@ export class UDPClient implements Client {
     if (!this.#conn) return;
     this.#conn.close();
   }
+}
+
+function _connectUDP(addr: Deno.NetAddr): Deno.DatagramConn {
+  if (!Deno.listenDatagram) {
+    throw new StatsDError(
+      "Cannot connect to UDP. Try enabling unstable APIs with '--unstable'",
+    );
+  }
+  return Deno.listenDatagram({
+    hostname: "127.0.0.1", // << Only localhost
+    port: 0, // << Whatever port
+    transport: "udp",
+  });
 }

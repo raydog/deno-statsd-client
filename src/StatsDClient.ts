@@ -12,13 +12,6 @@ type Tags = { [key: string]: string };
  */
 export class StatsDClient {
   #client: Client;
-  #mtu: number;
-  #maxDelay: number;
-
-  #timeout: number | null = null;
-  #encoder: TextEncoder = new TextEncoder();
-  #buffer: Uint8Array;
-  #idx = 0;
 
   #globalOpts: Required<MetricOpts>;
   #safeSampleRate: boolean;
@@ -31,62 +24,13 @@ export class StatsDClient {
    * @param conf Settings.
    */
   constructor(conf?: LibConfig) {
-    this.#client = _connect(conf?.server);
-    this.#mtu = conf?.mtu ?? 1500;
-    this.#maxDelay = conf?.maxDelayMs ?? 1000;
-    this.#buffer = new Uint8Array(this.#mtu);
+    const maxDelay = conf?.maxDelayMs ?? 1000;
+    this.#client = _connect(conf?.server, maxDelay);
     this.#globalOpts = {
       sampleRate: conf?.sampleRate ?? 1.0,
       tags: conf?.globalTags ?? {},
     };
     this.#safeSampleRate = conf?.safeSampleRate ?? true;
-  }
-
-  // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
-  private _queueData(data: string) {
-    const pre = this.#idx ? "\n" : "";
-    let enc = this.#encoder.encode(pre + data);
-    const buflen = this.#buffer.byteLength;
-
-    if (enc.byteLength > this.#buffer.byteLength) {
-      throw new StatsDError(
-        `Metric is too large for this MTU: ${enc.byteLength} > ${buflen}`,
-      );
-    }
-
-    if (this.#idx + enc.byteLength > buflen) {
-      this._flushData();
-      enc = enc.subarray(1); // Don't need the \n anymore
-    }
-
-    this.#buffer.set(enc, this.#idx);
-    this.#idx += enc.byteLength;
-
-    // Set flush timeout.
-    if (!this.#timeout) {
-      // TODO: maxDelay == 0 is an immediate send?
-      this.#timeout = setTimeout(
-        () => this._flushData(),
-        this.#maxDelay,
-      );
-    }
-  }
-
-  // Flush the metric buffer to the StatsD server:
-  private _flushData() {
-    if (this.#timeout != null) {
-      clearTimeout(this.#timeout);
-      this.#timeout = null;
-    }
-    if (this.#idx) {
-      const region = this.#buffer.subarray(0, this.#idx);
-      this.#buffer = new Uint8Array(this.#mtu);
-      this.#idx = 0;
-      this.#client.write(region)
-        .catch(
-          (err) => console.log("FAIL", err.message),
-        );
-    }
   }
 
   /**
@@ -114,7 +58,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildCountBody(key, num, sample, tags);
-    this._queueData(data);
+    this.#client.queueData(data);
   }
 
   /**
@@ -142,7 +86,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildTimingBody(key, ms, sample, tags);
-    this._queueData(data);
+    this.#client.queueData(data);
   }
 
   /**
@@ -173,7 +117,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildAbsGaugeBody(key, value, sample, tags);
-    this._queueData(data);
+    this.#client.queueData(data);
   }
 
   /**
@@ -202,7 +146,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildRelGaugeBody(key, delta, sample, tags);
-    this._queueData(data);
+    this.#client.queueData(data);
   }
 
   /**
@@ -227,7 +171,7 @@ export class StatsDClient {
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
     const data = metricFormats.buildSetBody(key, value, sample, tags);
-    this._queueData(data);
+    this.#client.queueData(data);
   }
 }
 
@@ -259,14 +203,15 @@ function _doSampling(rate: number): boolean {
   return (rate >= 1 || Math.random() < rate);
 }
 
-function _connect(info: LibConfig["server"]): Client {
+function _connect(info: LibConfig["server"], maxDelay: number): Client {
   const proto = info?.proto || null;
   switch (proto) {
     case null:
     case "udp": {
-      const host = info?.host || "localhost";
-      const port = info?.port || 8125;
-      return new UDPClient(host, port);
+      const host = info?.host ?? "localhost";
+      const port = info?.port ?? 8125;
+      const mtu = info?.mtu ?? 1500;
+      return new UDPClient(host, port, mtu, maxDelay);
     }
   }
 }
