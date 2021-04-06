@@ -5,7 +5,7 @@ A simple StatsD client for Deno.
 Since Deno's UDP stuff is still unstable, you'll need to use `--unstable` to use
 a UDP server. Also, you'll need to enable network access with `--allow-net`.
 
-```typescript
+```ts
 import { StatsDClient } from "https://deno.land/x/statsd@0.1.2/mod.ts";
 
 const client = new StatsDClient({
@@ -56,14 +56,16 @@ client.unique("users.unique", user.id);
     the wider internet) might need to reduce the MTU to 512 or less. It all
     depends on the routers that these packets get routed through, and how they
     were configured.
-  
+
   If connecting to a TCP server:
   - `proto`: `"tcp"`
   - `host` (string?) (Default: "localhost")
   - `port` (number?) (Default: 8125)
   - `maxQueue` (number?) (Default: 100)
-  
-    Sent metrics are queued up for a short bit (see: maxDelayMs) before sending to increase the number of metrics in each TCP frame. However, if the backlog exceeds this number of metrics, we'll send the items sooner.
+
+    Sent metrics are queued up for a short bit (see: maxDelayMs) before sending
+    to increase the number of metrics in each TCP frame. However, if the backlog
+    exceeds this number of metrics, we'll send the items sooner.
 
 - `sampleRate` (number?) (Default: 1.0)
 
@@ -106,13 +108,13 @@ client.unique("users.unique", user.id);
 
   Send a "count" metric. This is used to track the number of things.
 
-    ```typescript
-    // Count the number of times a route was used:
-    client.count("routes.get_api_resource");
+  ```ts
+  // Count the number of times a route was used:
+  client.count("routes.get_api_resource");
 
-    // Count the number of items purchased:
-    client.count("store.widgets.purchased", order.items.length);
-    ```
+  // Count the number of items purchased:
+  client.count("store.widgets.purchased", order.items.length);
+  ```
 
 - `timing(key: string, ms: number, opts?: MetricOpts)`
 
@@ -124,10 +126,10 @@ client.unique("users.unique", user.id);
   it can really be used for any value where things like min, max, mean90, etc...
   would be useful.
 
-    ```typescript
-    // Keep track of route response times:
-    client.timing("routes.get_api_resource.ok", Date.now() - start);
-    ```
+  ```ts
+  // Keep track of route response times:
+  client.timing("routes.get_api_resource.ok", Date.now() - start);
+  ```
 
 - `gauge(key: string, value: number, opts?: MetricOpts)`
 
@@ -138,29 +140,29 @@ client.unique("users.unique", user.id);
   of items in a db table", or "bytes remaining in the main disk partition."
   Things like that.
 
-    ```typescript
-    // Keep track of server disk usage:
-    client.gauge(
-      `servers.${await Deno.hostname()}.diskPercent`,
-      await getDiskPercent(),
-    );
+  ```ts
+  // Keep track of server disk usage:
+  client.gauge(
+    `servers.${await Deno.hostname()}.diskPercent`,
+    await getDiskPercent(),
+  );
 
-    // Keep track of items in a db table:
-    client.gauge("database.main.users", await userTable.count());
-    ```
+  // Keep track of items in a db table:
+  client.gauge("database.main.users", await userTable.count());
+  ```
 
 - `adjustGauge(key: string, delta: number, opts?: MetricOpts)` Sends a relative
   "gauge" metric. A _relative_ gauge metric may reference a gauge value (an
   absolute measurement) but we aren't sending that exact measurement right now.
   We're just sending an adjustment value.
 
-    ```typescript
-    // Adjust the total asset size after an upload:
-    client.adjustGauge("assets.size.overall", asset.byteLength);
+  ```ts
+  // Adjust the total asset size after an upload:
+  client.adjustGauge("assets.size.overall", asset.byteLength);
 
-    // Adjust the total number of users after a cancellation:
-    client.adjustGauge("users.count", -1);
-    ```
+  // Adjust the total number of users after a cancellation:
+  client.adjustGauge("users.count", -1);
+  ```
 
 - `unique(key: string, value: number | string, opts?: MetricOpts)`
 
@@ -168,10 +170,10 @@ client.unique("users.unique", user.id);
   in StatsD over time. Use this to track things like the number of disctint
   users.
 
-    ```typescript
-    // Track distinct authenticated users
-    client.unique("users.distinct", user.id);
-    ```
+  ```ts
+  // Track distinct authenticated users
+  client.unique("users.distinct", user.id);
+  ```
 
 - `async close(): Promise<void>`
 
@@ -186,3 +188,27 @@ Some params can be overridden for each metric with the MetricOpts object.
 - `sampleRate` - To use a custom sampleRate for this metric.
 - `tags` - To add some extra tags to this metric. (They are merged with the
   global tags)
+
+### Logging
+
+This library uses the std library's logger for its own internal logging. If
+those logs would be useful for debugging, then the `statsd` logger can be
+configured like so:
+
+```ts
+import * as log from "https://deno.land/std@0.92.0/log/mod.ts";
+
+await log.setup({
+  handlers: {
+    console: new log.handlers.ConsoleHandler("DEBUG"),
+  },
+  loggers: {
+    statsd: {
+      level: "INFO",
+      handlers: ["console"],
+    },
+  },
+});
+```
+
+Be sure to do this BEFORE initializing the `StatsDClient`.
