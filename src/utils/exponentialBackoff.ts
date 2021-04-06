@@ -9,7 +9,6 @@ const MAX_EXPONENT = 6; // 64 sec
  */
 export function* exponentialBackoff(): Generator<number, never, void> {
   for (let i = 0; i < MAX_EXPONENT; i++) {
-    const base = 2 ** i;
     yield (2 ** i) * 1000 + _randMilliseconds();
   }
 
