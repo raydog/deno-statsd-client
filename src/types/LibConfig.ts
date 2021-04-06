@@ -97,8 +97,8 @@ export interface TCPConfig {
    * Default value is "localhost".
    */
   host?: string;
-  
-   /**
+
+  /**
    * The server port number that we'll connect to.
    * 
    * Default value is 8125.

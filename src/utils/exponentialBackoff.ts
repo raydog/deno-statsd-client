@@ -8,15 +8,15 @@ const MAX_EXPONENT = 6; // 64 sec
  * milliseconds added, to reduce problematic reconnect swarms.
  */
 export function* exponentialBackoff(): Generator<number, never, void> {
-  for (let i=0; i<MAX_EXPONENT; i++) {
-    const base = 2**i;
-    yield (2**i) * 1000 + _randMilliseconds();
+  for (let i = 0; i < MAX_EXPONENT; i++) {
+    const base = 2 ** i;
+    yield (2 ** i) * 1000 + _randMilliseconds();
   }
 
   // We've reached the max exponent, but we're still asking for values. We must still be retrying, so keep repeating
   // the last exponent (with random fuzz) forever:
   while (true) {
-    yield (2**MAX_EXPONENT) * 1000 + _randMilliseconds();
+    yield (2 ** MAX_EXPONENT) * 1000 + _randMilliseconds();
   }
 }
 
