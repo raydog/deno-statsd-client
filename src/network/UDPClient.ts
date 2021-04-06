@@ -31,7 +31,9 @@ export class UDPClient implements Client {
       port: port,
     };
     this.#conn = _connectUDP(this.#addr);
-    this.#logger.info(`StatsD.UDP: Connected via ${describeAddr(this.#conn.addr)}`);
+    this.#logger.info(
+      `StatsD.UDP: Connected via ${describeAddr(this.#conn.addr)}`,
+    );
 
     this.#mtu = mtu;
     this.#maxDelay = maxDelay;
@@ -82,7 +84,7 @@ export class UDPClient implements Client {
         .catch(
           (err) => {
             this.#logger.error(`StatsD.UDP: Write error: ${err.message}`);
-          }
+          },
         );
     }
   }
@@ -90,7 +92,11 @@ export class UDPClient implements Client {
   private async _write(data: Uint8Array): Promise<void> {
     const num = await this.#conn.send(data, this.#addr);
 
-    this.#logger.debug(() => `StatsD.UDP: Sending ${data.byteLength}-byte packet to ${describeAddr(this.#addr)}`);
+    this.#logger.debug(() =>
+      `StatsD.UDP: Sending ${data.byteLength}-byte packet to ${
+        describeAddr(this.#addr)
+      }`
+    );
 
     if (num < 0) {
       throw new StatsDError("Datagram rejected by kernel.");

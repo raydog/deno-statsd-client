@@ -10,7 +10,7 @@ export function describeAddr(addr: Deno.Addr): string {
     case "udp":
     case "tcp":
       return `${addr.hostname}:${addr.port} (${addr.transport})`;
-    
+
     case "unix":
     case "unixpacket":
       return `${addr.path} (${addr.transport})`;

@@ -110,9 +110,15 @@ export class TCPClient implements Client {
 
       // TODO: It'd be real nice if we could enable TCP keepAlive, but Deno doesn't seem to support that yet
       if (this.#conn == null) {
-        this.#logger.debug(`StatsD.TCP: Connecting to ${this.#opts.hostname}:${this.#opts.port}...`);
+        this.#logger.debug(
+          `StatsD.TCP: Connecting to ${this.#opts.hostname}:${this.#opts.port}...`,
+        );
         this.#conn = await this._tcpConnect();
-        this.#logger.info(`StatsD.TCP: Connected to ${describeAddr(this.#conn.remoteAddr)} (via ${describeAddr(this.#conn.localAddr)})`);
+        this.#logger.info(
+          `StatsD.TCP: Connected to ${
+            describeAddr(this.#conn.remoteAddr)
+          } (via ${describeAddr(this.#conn.localAddr)})`,
+        );
       }
 
       try {
@@ -121,7 +127,6 @@ export class TCPClient implements Client {
           throw new StatsDError("Failed to write?");
         }
         offset += num;
-
       } catch (ex) {
         // Failed to write. Attempt to reconnect, and try again.
         // TODO: Is it safe to retry on the same chunk? Maybe advance to next metric in the chunk?
@@ -145,7 +150,10 @@ export class TCPClient implements Client {
       try {
         return await Deno.connect(this.#opts);
       } catch (ex) {
-        this.#logger.error(`StatsD.TCP: Failed to connect: write: ${ex.message}. Retrying in ${retryMs/1000} sec`);
+        this.#logger.error(
+          `StatsD.TCP: Failed to connect: write: ${ex.message}. Retrying in ${retryMs /
+            1000} sec`,
+        );
         await _sleep(retryMs);
       }
     }
