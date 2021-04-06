@@ -215,6 +215,22 @@ Deno.test("StatsDClient can merge global and metric tags", async () => {
   server.close();
 });
 
+Deno.test("StatsDClient close will flush backlog", async () => {
+  const [server, port] = _udpServer();
+  const client = new StatsDClient({
+    server: { proto: "udp", port },
+  });
+
+  const readPromise = _readMessage(server);
+  client.count("http.closing_flush", 1);
+  await client.close();
+
+  const mesg = await readPromise;
+  asserts.assertEquals(mesg, "http.closing_flush:1|c");
+
+  server.close();
+});
+
 Deno.test("StatsDClient double-close will error", async () => {
   const client = new StatsDClient();
   await client.close();
