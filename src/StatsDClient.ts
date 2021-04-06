@@ -195,8 +195,8 @@ export class StatsDClient {
    */
   async close(): Promise<void> {
     const client = this.getClient();
-    await client.close();
     this.#client = null;
+    await client.close();
   }
 }
 

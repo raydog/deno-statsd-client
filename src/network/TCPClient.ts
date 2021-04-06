@@ -18,8 +18,11 @@ export class TCPClient implements Client {
   #maxDelay: number;
   #conn: Deno.Conn | null = null;
 
+  #isShuttingDown = false;
+
   #timeout: number | null = null;
   #queue: string[];
+  #flushPromise: Promise<void> | null = null;
   #isFlushing = false;
 
   #logger = log.getLogger("statsd");
@@ -39,15 +42,17 @@ export class TCPClient implements Client {
 
   // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
   queueData(data: string) {
+    // Hack: if shutting down, don't accept more metrics.
+    if (this.#isShuttingDown) { return; }
     this.#queue.push(data + "\n");
 
-    // If this is set, we already have a flush queued, so don't bother:
-    if (this.#isFlushing) return;
+    // If this is set, we already have a flush running, so don't bother:
+    if (this.#flushPromise != null) return;
 
     // Else, is the backlog enough to FORCE us to flush before a timeout?
     if (this.#queue.length >= this.#maxQueue) {
       // console.log("TRIGGER: MAX Q");
-      this._flushData()
+      this.#flushPromise = this._flushData()
         .catch((err) => console.log(err.message));
       return;
     }
@@ -58,10 +63,13 @@ export class TCPClient implements Client {
     // console.log("SET TIMEOUT");
 
     // Else, nothing scheduled, so fire that schedule up!
+    this._scheduleFlush();
+  }
+
+  private _scheduleFlush() {
     this.#timeout = setTimeout(
       () => {
-        // console.log("TRIGGER: TIMER");
-        this._flushData()
+        this.#flushPromise = this._flushData()
           .catch((err) => console.log(err.message));
       },
       this.#maxDelay,
@@ -70,9 +78,7 @@ export class TCPClient implements Client {
 
   // Flush the metric buffer to the StatsD server:
   private async _flushData() {
-    this.#isFlushing = true;
-    // console.log("START FLUSH");
-
+    
     do {
       // Grab all the items that we can, and write them out.
       const items = this.#queue;
@@ -80,7 +86,6 @@ export class TCPClient implements Client {
 
       // We don't need the timeout anymore:
       if (this.#timeout != null) {
-        // console.log("  CLEAR TIMEOUT");
         clearTimeout(this.#timeout);
         this.#timeout = null;
       }
@@ -89,15 +94,21 @@ export class TCPClient implements Client {
       // should be equivalent. Update this to the correct Deno approach towards ASCII encoding, once a "correct" apprach
       // exists, but until then, I just don't want to do the ASCII encoding manually... (Manually is ~4x slower)
       const buf = encoder.encode(items.join(""));
-      // console.log("  FLUSHING %d metrics", items.length);
       await this._write(buf);
 
       // Keep flushing while there are enough items in the queue. This is because writing to a socket takes time, and
       // events *could* have crossed the maxQueue threshold again.
     } while (this.#queue.length >= this.#maxQueue);
 
-    // console.log("END FLUSH");
-    this.#isFlushing = false;
+    // At this point, we know that there are not over maxQueue items in the backlog, so we aren't flushing again.
+    // However, if there are still SOME items in the queue, we need to schedule another flush, so that there isn't a
+    // possiblity that they get left behind:
+    if (this.#queue.length && !this.#timeout && !this.#isShuttingDown) {
+      this._scheduleFlush();
+    }
+
+    // No matter what, we aren't flushing anymore:
+    this.#flushPromise = null;
   }
 
   private async _write(data: Uint8Array): Promise<void> {
@@ -138,11 +149,26 @@ export class TCPClient implements Client {
   }
 
   async close() {
-    if (!this.#conn) return;
+    if (this.#isShuttingDown) { return; }
+    this.#isShuttingDown = true;
+    
     this.#logger.info(`StatsD.TCP: Shutting down`);
-    // TODO: make safe?
-    await this._flushData();
-    this.#conn.close();
+    
+    // If we are currently flushing, work through that:
+    if (this.#flushPromise) {
+      await this.#flushPromise;
+    }
+    
+    // If there's still something left, flush again:
+    if (this.#queue.length) {
+      await this._flushData();
+    }
+    
+    // Ok, we're done. If connection exists, close it out:
+    if (this.#conn) {
+      this.#conn.close();
+      this.#conn = null;
+    }
   }
 
   private async _tcpConnect(): Promise<Deno.Conn> {
