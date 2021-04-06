@@ -1,5 +1,8 @@
 # Version history
 
+## v0.2.0 (WIP)
+- Add support for TCP connections
+
 ## v0.1.1 (2021-04-04)
 - Minor type and doc fixes
 
