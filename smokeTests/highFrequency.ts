@@ -1,4 +1,5 @@
 import { StatsDClient } from "../mod.ts";
+import { log } from "../deps.ts";
 
 /*
  * Envirnoment: StatsD server, running in docker. Port 8125 tcp or udp.
@@ -7,6 +8,18 @@ import { StatsDClient } from "../mod.ts";
  * 
  * Tests to make sure that the UDP buffer being flushed frequency doesn't lose data. Or that TCP can keep up.
  */
+
+await log.setup({
+  handlers: {
+    console: new log.handlers.ConsoleHandler("DEBUG"),
+  },
+  loggers: {
+    statsd: {
+      level: "DEBUG",
+      handlers: ["console"]
+    }
+  }
+});
 
 const c = new StatsDClient({
   server: {
