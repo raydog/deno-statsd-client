@@ -1,14 +1,18 @@
 import { StatsDClient } from "../mod.ts";
 
 /*
- * Envirnoment: StatsD server, running in docker. Port 8125/udp.
+ * Envirnoment: StatsD server, running in docker. Port 8125 tcp or udp.
  * 
- * `deno --unstable run --allow-net --allow-env highFrequencyUDP.ts`
+ * `deno --unstable run --allow-net --allow-env highFrequency.ts`
  * 
- * Tests to make sure that the UDP buffer being flushed frequency doesn't lose data.
+ * Tests to make sure that the UDP buffer being flushed frequency doesn't lose data. Or that TCP can keep up.
  */
 
-const c = new StatsDClient();
+const c = new StatsDClient({
+  server: {
+    proto: "tcp",
+  }
+});
 
 main();
 
@@ -16,9 +20,9 @@ main();
 // Note: we occasionally yield to the macro-task queue, because otherwise the JS vm would run out of memory, since we'd
 // generate chunks of memory to be flushed, but never actually give time to the network layer to do it.
 async function main() {
-  for (let i = 0; i < 10_000_000; i += 100) {
+  for (let i = 0; i < 10_000_000; i += 500) {
     // 100 at a time:
-    for (let j = 0; j < 100; j++) {
+    for (let j = 0; j < 500; j++) {
       c.count("deno.lots o counts");
     }
     await waitZero();

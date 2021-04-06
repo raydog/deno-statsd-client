@@ -1,14 +1,18 @@
 import { StatsDClient } from "../mod.ts";
 
 /*
- * Envirnoment: StatsD server, running in docker. Port 8125/udp.
+ * Envirnoment: StatsD server, running in docker. Port 8125, tcp or udp.
  * 
- * `deno --unstable run --allow-net --allow-env longPausesUDP.ts`
+ * `deno --unstable run --allow-net --allow-env longPauses.ts`
  * 
  * Tests to make sure that long pauses between sending still arrive at the server.
  */
 
-const c = new StatsDClient();
+const c = new StatsDClient({
+  server: {
+    proto: "tcp"
+  }
+});
 
 let prev = Date.now();
 
