@@ -34,9 +34,9 @@ client.unique("users.unique", user.id);
 
 ## Constructor options:
 
-- `server` (Object?) Object that describes what to connect to.
+- `server` (Object?) Object that describes how to connect to the server.
 
-  If connecting to a UDP server, then object should have:
+  If connecting to a UDP server:
 
   - `proto`: `"udp"`
   - `host` (string?) (Default: "localhost")
@@ -56,6 +56,14 @@ client.unique("users.unique", user.id);
     the wider internet) might need to reduce the MTU to 512 or less. It all
     depends on the routers that these packets get routed through, and how they
     were configured.
+  
+  If connecting to a TCP server:
+  - `proto`: `"tcp"`
+  - `host` (string?) (Default: "localhost")
+  - `port` (number?) (Default: 8125)
+  - `maxQueue` (number?) (Default: 100)
+  
+    Sent metrics are queued up for a short bit (see: maxDelayMs) before sending to increase the number of metrics in each TCP frame. However, if the backlog exceeds this number of metrics, we'll send the items sooner.
 
 - `sampleRate` (number?) (Default: 1.0)
 

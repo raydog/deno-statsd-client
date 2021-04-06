@@ -2,7 +2,7 @@ import { Tags } from "./Tags.ts";
 
 export interface LibConfig {
   /**
-   * Information on how to connect to a Server. If omitted, we'll try to connect to a UDP server on localhost:8125.
+   * How to connect to a Server. If omitted, we'll try to connect to a UDP server on localhost:8125.
    */
   server?: UDPConfig | TCPConfig;
 
