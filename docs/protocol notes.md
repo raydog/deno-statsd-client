@@ -75,6 +75,8 @@ Minor notes:
 
 Clients that only sent data in this subset would _probably_ be "safe":
 
+### UDP
+
 ```ebnf
 Packet = Datum, { "\n", Datum };
 Datum = Key, ":", Metrics, [ "|#" Tags ];
@@ -107,4 +109,19 @@ String = ? UTF-8 string without '|', '#', ':', '\n', or ';' ?;
 Sign = "+" | "-";
 Float-Pos = ? Floating-point number >= 0 (so no - or + prefix) ?;
 Float-Sample = ? Floating-point number between 0 and 1, inclusive ?;
+```
+
+### TCP
+
+Same as UDP, except it's explicly treated as ASCII, and not as UTF-8, probably
+just so they don't have to figure out what to do when code-points are split
+between TCP frames. We may want to restrict unicode for TCP transfers, just so
+metrics don't end up garbled.
+
+Also, EVERY Datum now has a `\n` AFTER it, instead of `\n` being used to
+separate datums. So to update the above:
+
+```ebnf
+Packet = { Datum, "\n" };
+String = ? ASCII string without '|', '#', ':', '\n', or ';' ?;
 ```
