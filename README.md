@@ -1,9 +1,16 @@
 # deno-statsd-client
 
-A simple StatsD client for Deno.
+A simple StatsD client for Deno. Supports the official stat metrics (counts,
+timings, gauges, sets), as well as both TCP and UDP connections.
 
-Since Deno's UDP stuff is still unstable, you'll need to use `--unstable` to use
-a UDP server. Also, you'll need to enable network access with `--allow-net`.
+**Permissions**:
+
+In order to connect with a remote server, you'll need to allow network
+connections to the stat server, either specifically
+(`--allow-net=localhost:8125`) or generally (`--allow-net`.)
+
+Also, since Deno's UDP stuff is still unstable, you'll need to use the
+`--unstable` flag if you wish to use a UDP server.
 
 ```ts
 import { StatsDClient } from "https://deno.land/x/statsd@0.1.2/mod.ts";
