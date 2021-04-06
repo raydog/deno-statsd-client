@@ -3,6 +3,8 @@
 ## v0.2.0 (WIP)
 
 - Add support for TCP connections
+- Can now enabling logging by configuring the `statsd` logger in the std logging
+  library.
 
 ## v0.1.1 (2021-04-04)
 

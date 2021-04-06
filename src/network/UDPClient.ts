@@ -1,5 +1,7 @@
 import { Client } from "../types/Client.ts";
 import { StatsDError } from "../StatsDError.ts";
+import { log } from "../../deps.ts";
+import { describeAddr } from "../utils/describeAddr.ts";
 
 const encoder: TextEncoder = new TextEncoder();
 
@@ -19,6 +21,8 @@ export class UDPClient implements Client {
   #buffer: Uint8Array;
   #idx = 0;
 
+  #logger = log.getLogger("statsd");
+
   // Simple constructor:
   constructor(host: string, port: number, mtu: number, maxDelay: number) {
     this.#addr = {
@@ -27,6 +31,7 @@ export class UDPClient implements Client {
       port: port,
     };
     this.#conn = _connectUDP(this.#addr);
+    this.#logger.info(`StatsD.UDP: Connected via ${describeAddr(this.#conn.addr)}`);
 
     this.#mtu = mtu;
     this.#maxDelay = maxDelay;
@@ -75,8 +80,9 @@ export class UDPClient implements Client {
       this.#idx = 0;
       await this._write(region)
         .catch(
-          // TODO: Somehow pass async errors back through the main library
-          (err) => console.log("FAIL", err.message),
+          (err) => {
+            this.#logger.error(`StatsD.UDP: Write error: ${err.message}`);
+          }
         );
     }
   }
@@ -84,9 +90,7 @@ export class UDPClient implements Client {
   private async _write(data: Uint8Array): Promise<void> {
     const num = await this.#conn.send(data, this.#addr);
 
-    // console.log("<".repeat(60));
-    // console.log(new TextDecoder().decode(data));
-    // console.log(">".repeat(60));
+    this.#logger.debug(() => `StatsD.UDP: Sending ${data.byteLength}-byte packet to ${describeAddr(this.#addr)}`);
 
     if (num < 0) {
       throw new StatsDError("Datagram rejected by kernel.");
@@ -95,6 +99,7 @@ export class UDPClient implements Client {
 
   async close() {
     if (!this.#conn) return;
+    this.#logger.info(`StatsD.UDP: Shutting down`);
     await this._flushData();
     this.#conn.close();
   }

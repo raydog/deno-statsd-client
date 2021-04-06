@@ -1,6 +1,8 @@
 import { Client } from "../types/Client.ts";
 import { StatsDError } from "../StatsDError.ts";
 import { exponentialBackoff } from "../utils/exponentialBackoff.ts";
+import { log } from "../../deps.ts";
+import { describeAddr } from "../utils/describeAddr.ts";
 
 const encoder: TextEncoder = new TextEncoder();
 
@@ -19,6 +21,8 @@ export class TCPClient implements Client {
   #timeout: number | null = null;
   #queue: string[];
   #isFlushing = false;
+
+  #logger = log.getLogger("statsd");
 
   // Simple constructor:
   constructor(host: string, port: number, maxQueue: number, maxDelay: number) {
@@ -97,6 +101,8 @@ export class TCPClient implements Client {
   }
 
   private async _write(data: Uint8Array): Promise<void> {
+    this.#logger.debug(`StatsD.TCP: Sending ${data.byteLength} bytes of data`);
+
     // Note: Deno claims that write returning anything less than data.byteLength should result in an error. I haven't
     // noticed that, so I'll instead keep trying to write the full buffer:
     for (let offset = 0; offset < data.byteLength;) {
@@ -104,52 +110,48 @@ export class TCPClient implements Client {
 
       // TODO: It'd be real nice if we could enable TCP keepAlive, but Deno doesn't seem to support that yet
       if (this.#conn == null) {
-        this.#conn = await _tcpConnect(this.#opts);
+        this.#logger.debug(`StatsD.TCP: Connecting to ${this.#opts.hostname}:${this.#opts.port}...`);
+        this.#conn = await this._tcpConnect();
+        this.#logger.info(`StatsD.TCP: Connected to ${describeAddr(this.#conn.remoteAddr)} (via ${describeAddr(this.#conn.localAddr)})`);
       }
 
       try {
         const num = await this.#conn.write(sub);
-        // console.log("  WROTE", num, "OF", sub.byteLength);
-
         if (num < 0) {
           throw new StatsDError("Failed to write?");
         }
         offset += num;
+
       } catch (ex) {
         // Failed to write. Attempt to reconnect, and try again.
         // TODO: Is it safe to retry on the same chunk? Maybe advance to next metric in the chunk?
-        // console.log("Write Error:", ex.message);
+        this.#logger.error(`StatsD.TCP: Failed to write: ${ex.message}`);
         this.#conn.close();
         this.#conn = null;
       }
     }
-
-    // TODO: Catch errors, and attempt to connect again. Maybe resend on safe errors?
-
-    // console.log("<".repeat(60));
-    // console.log(new TextDecoder().decode(data));
-    // console.log(">".repeat(60));
   }
 
   async close() {
     if (!this.#conn) return;
+    this.#logger.info(`StatsD.TCP: Shutting down`);
     // TODO: make safe?
     await this._flushData();
     this.#conn.close();
   }
-}
 
-async function _tcpConnect(opts: Deno.ConnectOptions): Promise<Deno.Conn> {
-  for (const retryMs of exponentialBackoff()) {
-    try {
-      return await Deno.connect(opts);
-    } catch (ex) {
-      // console.log("Connect Error:", ex.message);
-      await _sleep(retryMs);
+  private async _tcpConnect(): Promise<Deno.Conn> {
+    for (const retryMs of exponentialBackoff()) {
+      try {
+        return await Deno.connect(this.#opts);
+      } catch (ex) {
+        this.#logger.error(`StatsD.TCP: Failed to connect: write: ${ex.message}. Retrying in ${retryMs/1000} sec`);
+        await _sleep(retryMs);
+      }
     }
+    // @ts-expect-error - Typescript doesn't understand 'never' types in generator returns:
+    return null;
   }
-  // @ts-expect-error - Typescript doesn't understand 'never' types in generator returns:
-  return null;
 }
 
 function _sleep(ms: number): Promise<void> {
