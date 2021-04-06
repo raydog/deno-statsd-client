@@ -4,7 +4,7 @@ export interface LibConfig {
   /**
    * Information on how to connect to a Server. If omitted, we'll try to connect to a UDP server on localhost:8125.
    */
-  server?: UDPConfig;
+  server?: UDPConfig | TCPConfig;
 
   /**
    * The sampling rate we'll use for metrics. This should be a value between 0 and 1, inclusive.
@@ -49,7 +49,7 @@ export interface LibConfig {
 }
 
 /**
- * Information to connect to a UDP StatsD server.
+ * Information needed to connect to a UDP StatsD server.
  */
 export interface UDPConfig {
   proto: "udp";
@@ -83,4 +83,33 @@ export interface UDPConfig {
    * @default 1500 (Enough bytes for most server networks)
    */
   mtu?: number;
+}
+
+/**
+ * Information needed to connect to a TCP StatsD server.
+ */
+export interface TCPConfig {
+  proto: "tcp";
+
+  /**
+   * The server that we'll send our stats to.
+   * 
+   * Default value is "localhost".
+   */
+  host?: string;
+  
+   /**
+   * The server port number that we'll connect to.
+   * 
+   * Default value is 8125.
+   */
+  port?: number;
+
+  /**
+   * Sent metrics are queued up for a short bit (see: maxDelayMs) before sending, to increase the number of metrics in
+   * each TCP frame. However, if the backlog exceeds this number of items, we'll send the items sooner.
+   * 
+   * @default 100
+   */
+  maxQueue?: number;
 }
