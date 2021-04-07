@@ -2,12 +2,12 @@ import { asserts } from "../testDeps.ts";
 import { StatsDClient } from "./StatsDClient.ts";
 import { StatsDError } from "./StatsDError.ts";
 
-Deno.test("StatsDClient can initialize with default params", async () => {
+Deno.test("StatsDClient (UDP) can initialize with default params", async () => {
   const client = new StatsDClient();
   await client.close();
 });
 
-Deno.test("StatsDClient can send basic counts", async () => {
+Deno.test("StatsDClient (UDP) can send basic counts", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -22,7 +22,7 @@ Deno.test("StatsDClient can send basic counts", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can send basic timers", async () => {
+Deno.test("StatsDClient (UDP) can send basic timers", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -37,7 +37,7 @@ Deno.test("StatsDClient can send basic timers", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can send basic gauges", async () => {
+Deno.test("StatsDClient (UDP) can send basic gauges", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -52,7 +52,7 @@ Deno.test("StatsDClient can send basic gauges", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can send basic gauge adjustments", async () => {
+Deno.test("StatsDClient (UDP) can send basic gauge adjustments", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -67,7 +67,7 @@ Deno.test("StatsDClient can send basic gauge adjustments", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can send basic set metrics", async () => {
+Deno.test("StatsDClient (UDP) can send basic set metrics", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -85,7 +85,7 @@ Deno.test("StatsDClient can send basic set metrics", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can batch multiple metrics", async () => {
+Deno.test("StatsDClient (UDP) can batch multiple metrics", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -102,7 +102,7 @@ Deno.test("StatsDClient can batch multiple metrics", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can flush early when buffer exceeds the MTU", async () => {
+Deno.test("StatsDClient (UDP) can flush early when buffer exceeds the MTU", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port, mtu: 25 },
@@ -123,7 +123,7 @@ Deno.test("StatsDClient can flush early when buffer exceeds the MTU", async () =
   server.close();
 });
 
-Deno.test("StatsDClient can error when a metric exceeds the MTU", async () => {
+Deno.test("StatsDClient (UDP) can error when a metric exceeds the MTU", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port, mtu: 25 },
@@ -144,7 +144,7 @@ Deno.test("StatsDClient can error when a metric exceeds the MTU", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can have sample rates", async () => {
+Deno.test("StatsDClient (UDP) can have sample rates", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -165,7 +165,7 @@ Deno.test("StatsDClient can have sample rates", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can have global tags", async () => {
+Deno.test("StatsDClient (UDP) can have global tags", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -182,7 +182,7 @@ Deno.test("StatsDClient can have global tags", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can have metric tags", async () => {
+Deno.test("StatsDClient (UDP) can have metric tags", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -198,7 +198,7 @@ Deno.test("StatsDClient can have metric tags", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient can merge global and metric tags", async () => {
+Deno.test("StatsDClient (UDP) can merge global and metric tags", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -215,7 +215,7 @@ Deno.test("StatsDClient can merge global and metric tags", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient close will flush backlog", async () => {
+Deno.test("StatsDClient (UDP) close will flush backlog", async () => {
   const [server, port] = _udpServer();
   const client = new StatsDClient({
     server: { proto: "udp", port },
@@ -231,7 +231,7 @@ Deno.test("StatsDClient close will flush backlog", async () => {
   server.close();
 });
 
-Deno.test("StatsDClient double-close will error", async () => {
+Deno.test("StatsDClient (UDP) double-close will error", async () => {
   const client = new StatsDClient();
   await client.close();
   await asserts.assertThrowsAsync(() => client.close(), StatsDError);
