@@ -43,7 +43,7 @@ export class UDPClient implements Client {
 
   // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
   queueData(data: string) {
-    if (this.#isShuttingDown) { return; }
+    if (this.#isShuttingDown) return;
     const pre = this.#idx ? "\n" : "";
     let enc = encoder.encode(pre + data);
     const buflen = this.#buffer.byteLength;
@@ -106,11 +106,11 @@ export class UDPClient implements Client {
   }
 
   async close() {
-    if (this.#isShuttingDown) { return; }
+    if (this.#isShuttingDown) return;
     this.#isShuttingDown = true;
-    
+
     this.#logger.info(`StatsD.UDP: Shutting down`);
-    
+
     await this._flushData();
     this.#conn.close();
   }

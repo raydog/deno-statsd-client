@@ -16,15 +16,15 @@ await log.setup({
   loggers: {
     statsd: {
       level: "DEBUG",
-      handlers: ["console"]
-    }
-  }
+      handlers: ["console"],
+    },
+  },
 });
 
 const c = new StatsDClient({
   server: {
-    proto: "tcp"
-  }
+    proto: "tcp",
+  },
 });
 
 let prev = Date.now();

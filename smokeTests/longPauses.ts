@@ -9,7 +9,6 @@ import { log } from "../deps.ts";
  * Tests to make sure that long pauses between sending still arrive at the server.
  */
 
-
 await log.setup({
   handlers: {
     console: new log.handlers.ConsoleHandler("DEBUG"),
@@ -17,16 +16,15 @@ await log.setup({
   loggers: {
     statsd: {
       level: "DEBUG",
-      handlers: ["console"]
-    }
-  }
+      handlers: ["console"],
+    },
+  },
 });
-
 
 const c = new StatsDClient({
   server: {
-    proto: "tcp"
-  }
+    proto: "tcp",
+  },
 });
 
 let prev = Date.now();

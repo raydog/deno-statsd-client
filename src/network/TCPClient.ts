@@ -43,7 +43,7 @@ export class TCPClient implements Client {
   // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
   queueData(data: string) {
     // Hack: if shutting down, don't accept more metrics.
-    if (this.#isShuttingDown) { return; }
+    if (this.#isShuttingDown) return;
     this.#queue.push(data + "\n");
 
     // If this is set, we already have a flush running, so don't bother:
@@ -78,7 +78,6 @@ export class TCPClient implements Client {
 
   // Flush the metric buffer to the StatsD server:
   private async _flushData() {
-    
     do {
       // Grab all the items that we can, and write them out.
       const items = this.#queue;
@@ -149,21 +148,21 @@ export class TCPClient implements Client {
   }
 
   async close() {
-    if (this.#isShuttingDown) { return; }
+    if (this.#isShuttingDown) return;
     this.#isShuttingDown = true;
-    
+
     this.#logger.info(`StatsD.TCP: Shutting down`);
-    
+
     // If we are currently flushing, work through that:
     if (this.#flushPromise) {
       await this.#flushPromise;
     }
-    
+
     // If there's still something left, flush again:
     if (this.#queue.length) {
       await this._flushData();
     }
-    
+
     // Ok, we're done. If connection exists, close it out:
     if (this.#conn) {
       this.#conn.close();

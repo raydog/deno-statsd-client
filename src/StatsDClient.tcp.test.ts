@@ -8,11 +8,11 @@ Deno.test("StatsDClient (TCP) can send basic counts", async () => {
     server: { proto: "tcp", port: server.port },
     maxDelayMs: 10,
   });
-  
+
   client.count("foo.bar");
 
   await server.check("foo.bar:1|c\n");
-  
+
   await client.close();
   server.close();
 });
@@ -27,7 +27,7 @@ Deno.test("StatsDClient (TCP) can send basic timers", async () => {
   client.timing("test.timing", 22);
 
   await server.check("test.timing:22|ms\n");
-  
+
   await client.close();
   server.close();
 });
@@ -42,7 +42,7 @@ Deno.test("StatsDClient (TCP) can send basic gauges", async () => {
   client.gauge("test.gauge", 1);
 
   await server.check("test.gauge:1|g\n");
-  
+
   await client.close();
   server.close();
 });
@@ -57,7 +57,7 @@ Deno.test("StatsDClient (TCP) can send basic gauge adjustments", async () => {
   client.adjustGauge("test.gauge", -42);
 
   await server.check("test.gauge:-42|g\n");
-  
+
   await client.close();
   server.close();
 });
@@ -71,8 +71,10 @@ Deno.test("StatsDClient (TCP) can send basic set metrics", async () => {
 
   client.unique("test.distinct-users", "55fe6ee9-6f4e-4805-9685-6b42f73ac9ed");
 
-  await server.check("test.distinct-users:55fe6ee9-6f4e-4805-9685-6b42f73ac9ed|s\n");
-  
+  await server.check(
+    "test.distinct-users:55fe6ee9-6f4e-4805-9685-6b42f73ac9ed|s\n",
+  );
+
   await client.close();
   server.close();
 });
@@ -89,7 +91,7 @@ Deno.test("StatsDClient (TCP) can batch multiple metrics", async () => {
 
   await server.check("http.requests:1|c\n");
   await server.check("http.response-time:22|ms\n");
-  
+
   await client.close();
   server.close();
 });
@@ -109,7 +111,7 @@ Deno.test("StatsDClient (TCP) can have sample rates", async () => {
   Math.random = mathRandom; // Restore.
 
   await server.check("http.requests:1|c|@0.5\n");
-  
+
   await client.close();
   server.close();
 });
@@ -125,7 +127,7 @@ Deno.test("StatsDClient (TCP) can have global tags", async () => {
   client.count("http.requests", 1);
 
   await server.check("http.requests:1|c|#host:talking-whiz-kid-plus\n");
-  
+
   await client.close();
   server.close();
 });
@@ -140,7 +142,7 @@ Deno.test("StatsDClient (TCP) can have metric tags", async () => {
   client.count("http.requests", 1, { tags: { mood: "meh" } });
 
   await server.check("http.requests:1|c|#mood:meh\n");
-  
+
   await client.close();
   server.close();
 });
@@ -156,7 +158,7 @@ Deno.test("StatsDClient (TCP) can merge global and metric tags", async () => {
   client.count("http.requests", 1, { tags: { "tier": "pro" } });
 
   await server.check("http.requests:1|c|#region:us-east-1,tier:pro\n");
-  
+
   await client.close();
   server.close();
 });
@@ -178,7 +180,7 @@ Deno.test("StatsDClient (TCP) close will flush backlog", async () => {
 Deno.test("StatsDClient (TCP) double-close will error", async () => {
   const server = new TCPServer();
   const client = new StatsDClient({
-    server: { proto: "tcp", port: server.port }
+    server: { proto: "tcp", port: server.port },
   });
   await client.close();
   await server.close();
@@ -192,19 +194,19 @@ class TCPServer {
   #server: Deno.Listener;
   #conn: Deno.Conn | null = null;
   #bufRead: BufReader | null = null;
-  
+
   constructor() {
     this.#server = Deno.listen({
       transport: "tcp",
       hostname: "localhost",
       port: 0,
-    })
+    });
     if (this.#server.addr.transport !== "tcp") throw new Error("Bad transport");
     this.port = this.#server.addr.port;
   }
 
   async getLineReader(): Promise<BufReader> {
-    if (this.#bufRead) { return this.#bufRead; }
+    if (this.#bufRead) return this.#bufRead;
     this.#conn = await this.#server.accept();
     return (this.#bufRead = new BufReader(this.#conn));
   }
