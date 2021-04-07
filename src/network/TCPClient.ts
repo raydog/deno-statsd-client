@@ -51,16 +51,16 @@ export class TCPClient implements Client {
 
     // Else, is the backlog enough to FORCE us to flush before a timeout?
     if (this.#queue.length >= this.#maxQueue) {
-      // console.log("TRIGGER: MAX Q");
       this.#flushPromise = this._flushData()
-        .catch((err) => console.log(err.message));
+        .catch((err) => {
+          this.#logger.debug(`StatsD.TCP: Failed to flush: ${err.message}`);
+        });
+
       return;
     }
 
     // Is there a flush scheduled?
     if (this.#timeout != null) return;
-
-    // console.log("SET TIMEOUT");
 
     // Else, nothing scheduled, so fire that schedule up!
     this._scheduleFlush();
@@ -70,7 +70,9 @@ export class TCPClient implements Client {
     this.#timeout = setTimeout(
       () => {
         this.#flushPromise = this._flushData()
-          .catch((err) => console.log(err.message));
+          .catch((err) => {
+            this.#logger.debug(`StatsD.TCP: Failed to flush: ${err.message}`);
+          });
       },
       this.#maxDelay,
     );
