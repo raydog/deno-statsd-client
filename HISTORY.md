@@ -1,6 +1,6 @@
 # Version history
 
-## v0.2.0 (WIP)
+## v0.2.0 (2021-04-06)
 
 - Add support for TCP connections
 - Can now enabling logging by configuring the `statsd` logger in the std logging
