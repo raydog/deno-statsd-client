@@ -1,5 +1,7 @@
 # deno-statsd-client
 
+[![Deno](https://github.com/raydog/deno-statsd-client/actions/workflows/deno.yml/badge.svg?branch=main)](https://github.com/raydog/deno-statsd-client/actions/workflows/deno.yml)
+
 A simple StatsD client for Deno. Supports the official stat metrics (counts,
 timings, gauges, sets), as well as both TCP and UDP connections.
 
