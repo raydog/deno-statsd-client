@@ -13,7 +13,7 @@ Also, since Deno's UDP stuff is still unstable, you'll need to use the
 `--unstable` flag if you wish to use a UDP server.
 
 ```ts
-import { StatsDClient } from "https://deno.land/x/statsd@0.1.2/mod.ts";
+import { StatsDClient } from "https://deno.land/x/statsd@0.2.0/mod.ts";
 
 const client = new StatsDClient({
   server: {
