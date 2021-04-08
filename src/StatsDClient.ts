@@ -1,5 +1,6 @@
 import { Client } from "./types/Client.ts";
 import { UDPClient } from "./network/UDPClient.ts";
+import { SocketClient } from "./network/SocketClient.ts";
 import {
   LibConfig,
   TCPConfig,
@@ -9,7 +10,6 @@ import {
 import { MetricOpts } from "./types/MetricOpts.ts";
 import * as metricFormats from "./utils/metricFormats.ts";
 import { StatsDError } from "./StatsDError.ts";
-import { TCPClient } from "./network/TCPClient.ts";
 
 type Tags = { [key: string]: string };
 
@@ -250,14 +250,14 @@ function _connect(info: LibConfig["server"], maxDelay: number): Client {
       const host = tcp.host ?? "localhost";
       const port = tcp.port ?? 8125;
       const maxQueue = tcp.maxQueue ?? 100;
-      return new TCPClient({ mode: "tcp", host, port, maxQueue, maxDelay });
+      return new SocketClient({ mode: "tcp", host, port, maxQueue, maxDelay });
     }
 
     case "unix": {
       const tcp = info as UnixConfig;
       const path = tcp.path;
       const maxQueue = tcp.maxQueue ?? 100;
-      return new TCPClient({ mode: "unix", path, maxQueue, maxDelay });
+      return new SocketClient({ mode: "unix", path, maxQueue, maxDelay });
     }
   }
 }

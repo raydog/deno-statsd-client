@@ -26,7 +26,7 @@ type UnixOpts = {
  * 
  * @private
  */
-export class TCPClient implements Client {
+export class SocketClient implements Client {
   #opts: Deno.ConnectOptions | Deno.UnixConnectOptions;
 
   #maxQueue: number;
