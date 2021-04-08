@@ -3,14 +3,16 @@
 A simple StatsD client for Deno. Supports the official stat metrics (counts,
 timings, gauges, sets), as well as both TCP and UDP connections.
 
-**Permissions**:
+**Deno command-line args**:
 
-In order to connect with a remote server, you'll need to allow network
-connections to the stat server, either specifically
-(`--allow-net=localhost:8125`) or generally (`--allow-net`.)
+You'll need certain flags to use this library, either to enable certain
+permsissions, or to enable unstable APIs:
 
-Also, since Deno's UDP stuff is still unstable, you'll need to use the
-`--unstable` flag if you wish to use a UDP server.
+| If connecting via:  | You'll need:                                |
+| ------------------- | ------------------------------------------- |
+| UDP Datagrams       | `--unstable` `--allow-net`                  |
+| TCP Packets         | `--allow-net`                               |
+| Unix Domain Sockets | `--unstable` `--allow-read` `--allow-write` |
 
 ```ts
 import { StatsDClient } from "https://deno.land/x/statsd@0.2.0/mod.ts";
@@ -43,7 +45,7 @@ client.unique("users.unique", user.id);
 
 - `server` (Object?) Object that describes how to connect to the server.
 
-  If connecting to a UDP server:
+  If connecting via UDP datagrams:
 
   - `proto`: `"udp"`
   - `host` (string?) (Default: "localhost")
@@ -64,7 +66,8 @@ client.unique("users.unique", user.id);
     depends on the routers that these packets get routed through, and how they
     were configured.
 
-  If connecting to a TCP server:
+  If connecting via a TCP socket:
+
   - `proto`: `"tcp"`
   - `host` (string?) (Default: "localhost")
   - `port` (number?) (Default: 8125)
@@ -73,6 +76,16 @@ client.unique("users.unique", user.id);
     Sent metrics are queued up for a short bit (see: maxDelayMs) before sending
     to increase the number of metrics in each TCP frame. However, if the backlog
     exceeds this number of metrics, we'll send the items sooner.
+
+  If connection via a Unix domain socket:
+
+  - `proto`: `"unix"`
+  - `path` (string)
+  - `maxQueue` (number?) (Default: 100)
+
+    Sent metrics are queued up for a short bit (see: maxDelayMs) before sending,
+    to decrease the number of filesystem writes. However, if the backlog exceeds
+    this number of items, we'll send the items sooner.
 
 - `sampleRate` (number?) (Default: 1.0)
 
