@@ -1,6 +1,6 @@
 # Version history
 
-## v0.3.0 (WIP)
+## v0.3.0 (2021-04-07)
 
 - Add UDP (Unix Domain Socket) support.
 
