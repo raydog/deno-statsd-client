@@ -12,7 +12,7 @@ export function describeAddr(
     case undefined:
     case "udp":
     case "tcp":
-      return `${addr.hostname}:${addr.port} (${addr.transport})`;
+      return `${addr.hostname}:${addr.port} (${addr.transport ?? "tcp"})`;
 
     case "unix":
     case "unixpacket":
