@@ -6,13 +6,28 @@ import { describeAddr } from "../utils/describeAddr.ts";
 
 const encoder: TextEncoder = new TextEncoder();
 
+type TCPOpts = {
+  mode: "tcp";
+  host: string;
+  port: number;
+  maxQueue: number;
+  maxDelay: number;
+};
+
+type UnixOpts = {
+  mode: "unix";
+  path: string;
+  maxQueue: number;
+  maxDelay: number;
+};
+
 /**
- * Client used to send data over TCP.
+ * Client used to send data over either Unix or TCP sockets.
  * 
  * @private
  */
 export class TCPClient implements Client {
-  #opts: Deno.ConnectOptions;
+  #opts: Deno.ConnectOptions | Deno.UnixConnectOptions;
 
   #maxQueue: number;
   #maxDelay: number;
@@ -21,23 +36,31 @@ export class TCPClient implements Client {
   #isShuttingDown = false;
 
   #timeout: number | null = null;
-  #queue: string[];
+  #queue: string[] = [];
   #flushPromise: Promise<void> | null = null;
-  #isFlushing = false;
 
   #logger = log.getLogger("statsd");
 
   // Simple constructor:
-  constructor(host: string, port: number, maxQueue: number, maxDelay: number) {
-    this.#opts = {
-      transport: "tcp",
-      hostname: host,
-      port: port,
-    };
+  constructor(opts: TCPOpts | UnixOpts) {
+    this.#maxQueue = opts.maxQueue;
+    this.#maxDelay = opts.maxDelay;
+    switch (opts.mode) {
+      case "tcp":
+        this.#opts = {
+          transport: "tcp",
+          hostname: opts.host,
+          port: opts.port,
+        };
+        break;
 
-    this.#maxQueue = maxQueue;
-    this.#maxDelay = maxDelay;
-    this.#queue = [];
+      case "unix":
+        this.#opts = {
+          transport: "unix",
+          path: opts.path,
+        };
+        break;
+    }
   }
 
   // Pushes a metric line to be written. Doesn't IMMEDIATELY write:
@@ -123,7 +146,7 @@ export class TCPClient implements Client {
       // TODO: It'd be real nice if we could enable TCP keepAlive, but Deno doesn't seem to support that yet
       if (this.#conn == null) {
         this.#logger.debug(
-          `StatsD.TCP: Connecting to ${this.#opts.hostname}:${this.#opts.port}...`,
+          `StatsD.TCP: Connecting to ${describeAddr(this.#opts)}...`,
         );
         this.#conn = await this._tcpConnect();
         this.#logger.info(

@@ -5,6 +5,13 @@ import { describeAddr } from "../utils/describeAddr.ts";
 
 const encoder: TextEncoder = new TextEncoder();
 
+type ConstructorOpts = {
+  host: string;
+  port: number;
+  mtu: number;
+  maxDelay: number;
+};
+
 /**
  * Client used to send data over UDP.
  * 
@@ -25,7 +32,7 @@ export class UDPClient implements Client {
   #logger = log.getLogger("statsd");
 
   // Simple constructor:
-  constructor(host: string, port: number, mtu: number, maxDelay: number) {
+  constructor({ host, port, mtu, maxDelay }: ConstructorOpts) {
     this.#addr = {
       transport: "udp",
       hostname: host,

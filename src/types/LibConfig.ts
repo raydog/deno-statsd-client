@@ -4,7 +4,7 @@ export interface LibConfig {
   /**
    * How to connect to a Server. If omitted, we'll try to connect to a UDP server on localhost:8125.
    */
-  server?: UDPConfig | TCPConfig;
+  server?: UDPConfig | TCPConfig | UnixConfig;
 
   /**
    * The sampling rate we'll use for metrics. This should be a value between 0 and 1, inclusive.
@@ -108,6 +108,26 @@ export interface TCPConfig {
   /**
    * Sent metrics are queued up for a short bit (see: maxDelayMs) before sending, to increase the number of metrics in
    * each TCP frame. However, if the backlog exceeds this number of items, we'll send the items sooner.
+   * 
+   * @default 100
+   */
+  maxQueue?: number;
+}
+
+/**
+ * Information needed to connect to a UDS (Unix Domain Socket) StatsD server.
+ */
+export interface UnixConfig {
+  proto: "unix";
+
+  /**
+   * The path to the socket file.
+   */
+  path: string;
+
+  /**
+   * Sent metrics are queued up for a short bit (see: maxDelayMs) before sending, to decrease the number of filesystem
+   * writes. However, if the backlog exceeds this number of items, we'll send the items sooner.
    * 
    * @default 100
    */

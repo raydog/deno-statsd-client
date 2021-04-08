@@ -5,8 +5,11 @@
  * @param addr 
  * @returns 
  */
-export function describeAddr(addr: Deno.Addr): string {
+export function describeAddr(
+  addr: Deno.Addr | Deno.ConnectOptions | Deno.UnixConnectOptions,
+): string {
   switch (addr.transport) {
+    case undefined:
     case "udp":
     case "tcp":
       return `${addr.hostname}:${addr.port} (${addr.transport})`;

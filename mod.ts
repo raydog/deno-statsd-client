@@ -1,4 +1,9 @@
-export type { LibConfig, TCPConfig, UDPConfig } from "./src/types/LibConfig.ts";
+export type {
+  LibConfig,
+  TCPConfig,
+  UDPConfig,
+  UnixConfig,
+} from "./src/types/LibConfig.ts";
 export type { MetricOpts } from "./src/types/MetricOpts.ts";
 export type { Tags } from "./src/types/Tags.ts";
 

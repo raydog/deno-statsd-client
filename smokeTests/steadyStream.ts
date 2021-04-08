@@ -2,7 +2,7 @@ import { StatsDClient } from "../mod.ts";
 import { log } from "../deps.ts";
 
 /*
- * Envirnoment: StatsD server, running in docker. Port 8125, tcp or udp.
+ * Envirnoment: StatsD server, running in docker.
  * 
  * `deno --unstable run --allow-net --allow-env steadyStream.ts`
  * 

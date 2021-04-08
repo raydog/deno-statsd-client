@@ -19,6 +19,14 @@ Deno.test("describeAddr works for TCP", () => {
   asserts.assertEquals(describeAddr(addr), "localhost:1234 (tcp)");
 });
 
+Deno.test("describeAddr works for default transport", () => {
+  const opts: Deno.ConnectOptions = {
+    hostname: "localhost",
+    port: 1234,
+  };
+  asserts.assertEquals(describeAddr(opts), "localhost:1234 (tcp)");
+});
+
 Deno.test("describeAddr works for unix sockets", () => {
   const addr: Deno.Addr = { transport: "unix", path: "/run/server/blah.sock" };
   asserts.assertEquals(describeAddr(addr), "/run/server/blah.sock (unix)");
