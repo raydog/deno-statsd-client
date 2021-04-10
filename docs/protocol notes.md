@@ -135,5 +135,29 @@ Same as TCP, but over the wire.
 
 The datadog protocol is actually fairly well documented
 [over here](https://docs.datadoghq.com/developers/dogstatsd/datagram_shell).
-They seem to mostly follow the StatsD approach, but they are more narrow in
-their key format.
+They seem to mostly follow the StatsD approach for overall metric structure, but
+are much more narrow about the keys they accept.
+
+For keys:
+
+- Must start with a letter.
+- Only ASCII alphanumerics, underscores, and periods.
+- Unicode is _NOT_ supported.
+- While other chars are converted to "_"s inside the service, the golang agent
+  code does a Bytes.Index() search which returns the first index of a char, so
+  ":"s in keys will jank up parsing. And if there are > 3 "|" chars, it'll
+  reject. So we should be fairly restrictive in the metrics we send, and not
+  just send fields anyways, and depend on datadog normalizing things.
+- Also, keep keys under 200 chars.
+
+For Tags, I couldn't find real docs about the specific field formats. However:
+
+- "|" presense would totally b0rk the overall metric validator.
+- "," is strictly split on in the tag parser. ":" is not parsed inside the tag
+  stuff.
+
+So I'll keep the tag key and value validators the same as the key validator.
+
+```ebnf
+String = ? /[a-z][a-z0-9_.]*/i ?;
+```

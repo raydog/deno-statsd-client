@@ -108,8 +108,11 @@ Deno.test("StatsDDialect.assertValidPositiveFloat accepts ok positive floats", (
 
 Deno.test("StatsDDialect.assertValidPositiveFloat rejects bad positive floats", () => {
   const d = new StatsDDialect(true);
-  asserts.assertThrows(() => d.assertValidPositiveFloat(-1), StatsDError),
-    "0 or greater";
+  asserts.assertThrows(
+    () => d.assertValidPositiveFloat(-1),
+    StatsDError,
+    "0 or greater",
+  );
   asserts.assertThrows(
     () => d.assertValidPositiveFloat(-0.0001),
     StatsDError,

@@ -10,8 +10,9 @@ import {
 import { MetricOpts } from "./types/MetricOpts.ts";
 import * as metricFormats from "./utils/metricFormats.ts";
 import { StatsDError } from "./StatsDError.ts";
-import { StatsDDialect } from "./dialects/StatsDDialect.ts";
 import { Dialect } from "./types/Dialect.ts";
+import { StatsDDialect } from "./dialects/StatsDDialect.ts";
+import { DatadogDialect } from "./dialects/DatadogDialect.ts";
 
 type Tags = { [key: string]: string };
 
@@ -298,6 +299,14 @@ function _connect(info: LibConfig["server"], maxDelay: number): Client {
 }
 
 function _getDialect(config: LibConfig | undefined) {
-  const proto = config?.server?.proto ?? "udp";
-  return new StatsDDialect(proto === "udp");
+  switch (config?.dialect) {
+    case undefined:
+    case "statsd": {
+      const proto = config?.server?.proto ?? "udp";
+      return new StatsDDialect(proto === "udp");
+    }
+
+    case "datadog":
+      return new DatadogDialect();
+  }
 }
