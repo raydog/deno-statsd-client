@@ -1,4 +1,5 @@
 export type {
+  Dialect,
   LibConfig,
   TCPConfig,
   UDPConfig,

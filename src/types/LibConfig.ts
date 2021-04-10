@@ -7,6 +7,20 @@ export interface LibConfig {
   server?: UDPConfig | TCPConfig | UnixConfig;
 
   /**
+   * There are many different statistic products out there, that all speak the StatsD protocol, or at least some variant
+   * of it. This property allows us to select different StatD dialects, which could unlock some new features, and may
+   * also change some subtle features behind-the-scenes to work better with this server. (Like how tags get normalized,
+   * for example.)
+   * 
+   * Valid dialects:
+   * - `"statsd"`: The official StatsD server, written by Etsy with Node.js.
+   * - `"datadog"`: The version of StatsD supported by DogStatD, the Datadog stat server.
+   * 
+   * @default "statsd"
+   */
+  dialect?: "statsd" | "datadog";
+
+  /**
    * The sampling rate we'll use for metrics. This should be a value between 0 and 1, inclusive.
    * 
    * For example, if this value is set to 0.1, then 1 out of 10 calls to .count() will actually result in a counter
@@ -57,14 +71,14 @@ export interface UDPConfig {
   /**
    * The server that we'll send our stats to.
    * 
-   * Default value is "localhost".
+   * @default "localhost"
    */
   host?: string;
 
   /**
    * The server port number that we'll connect to.
    * 
-   * Default value is 8125.
+   * @default 8125
    */
   port?: number;
 
@@ -94,14 +108,14 @@ export interface TCPConfig {
   /**
    * The server that we'll send our stats to.
    * 
-   * Default value is "localhost".
+   * @default "localhost"
    */
   host?: string;
 
   /**
    * The server port number that we'll connect to.
    * 
-   * Default value is 8125.
+   * @default 8125
    */
   port?: number;
 

@@ -33,6 +33,6 @@ setInterval(sendOne, 500);
 
 function sendOne() {
   const now = Date.now();
-  c.timing("deno.steady-stream", now - prev);
+  c.timing("deno.steady-stream", now - prev, { tags: { host: "localhost" } });
   prev = now;
 }

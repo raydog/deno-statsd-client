@@ -10,6 +10,8 @@ import {
 import { MetricOpts } from "./types/MetricOpts.ts";
 import * as metricFormats from "./utils/metricFormats.ts";
 import { StatsDError } from "./StatsDError.ts";
+import { StatsDDialect } from "./dialects/StatsDDialect.ts";
+import { Dialect } from "./types/Dialect.ts";
 
 type Tags = { [key: string]: string };
 
@@ -21,6 +23,8 @@ export class StatsDClient {
 
   #globalOpts: Required<MetricOpts>;
   #safeSampleRate: boolean;
+
+  #dialect: Dialect;
 
   // Returns the client. Used to implement a shutdown state:
   private getClient(): Client {
@@ -45,6 +49,7 @@ export class StatsDClient {
       tags: conf?.globalTags ?? {},
     };
     this.#safeSampleRate = conf?.safeSampleRate ?? true;
+    this.#dialect = _getDialect(conf);
   }
 
   /**
@@ -72,7 +77,13 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildCountBody(key, num, sample, tags);
+    const data = metricFormats.buildCountBody(
+      this.#dialect,
+      key,
+      num,
+      sample,
+      tags,
+    );
     client.queueData(data);
   }
 
@@ -101,7 +112,13 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildTimingBody(key, ms, sample, tags);
+    const data = metricFormats.buildTimingBody(
+      this.#dialect,
+      key,
+      ms,
+      sample,
+      tags,
+    );
     client.queueData(data);
   }
 
@@ -133,7 +150,13 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildAbsGaugeBody(key, value, sample, tags);
+    const data = metricFormats.buildAbsGaugeBody(
+      this.#dialect,
+      key,
+      value,
+      sample,
+      tags,
+    );
     client.queueData(data);
   }
 
@@ -163,7 +186,13 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildRelGaugeBody(key, delta, sample, tags);
+    const data = metricFormats.buildRelGaugeBody(
+      this.#dialect,
+      key,
+      delta,
+      sample,
+      tags,
+    );
     client.queueData(data);
   }
 
@@ -189,7 +218,13 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildSetBody(key, value, sample, tags);
+    const data = metricFormats.buildSetBody(
+      this.#dialect,
+      key,
+      value,
+      sample,
+      tags,
+    );
     client.queueData(data);
   }
 
@@ -225,7 +260,7 @@ function _getTags(
   return {
     ...globalOpts.tags,
     ...metricOpts?.tags,
-  };
+  } as Tags;
 }
 
 // Return true if we should send this metric, based on the sampling rates, and the metric in question:
@@ -260,4 +295,9 @@ function _connect(info: LibConfig["server"], maxDelay: number): Client {
       return new SocketClient({ mode: "unix", path, maxQueue, maxDelay });
     }
   }
+}
+
+function _getDialect(config: LibConfig | undefined) {
+  const proto = config?.server?.proto ?? "udp";
+  return new StatsDDialect(proto === "udp");
 }

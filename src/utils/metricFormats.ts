@@ -1,6 +1,5 @@
-import * as validate from "./fieldValidations.ts";
-
-type TagType = { [key: string]: string };
+import { Dialect } from "../types/Dialect.ts";
+import { Tags } from "../types/Tags.ts";
 
 /**
  * Produce the "count" string that'd be sent over the wire.
@@ -14,15 +13,16 @@ type TagType = { [key: string]: string };
  * @returns Data to be sent.
  */
 export function buildCountBody(
+  dialect: Dialect,
   key: string,
   val: number | undefined,
   sample: number,
-  tags: TagType,
+  tags: Tags,
 ): string {
   val ??= 1;
-  validate.assertValidKey(key);
-  validate.assertValidTags(tags);
-  validate.assertFloat(val);
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidSignedFloat(val);
+  dialect.assertValidTags(tags);
   return `${key}:${val}|c${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
@@ -38,14 +38,15 @@ export function buildCountBody(
  * @returns Data to be sent.
  */
 export function buildTimingBody(
+  dialect: Dialect,
   key: string,
   val: number,
   sample: number,
-  tags: TagType,
+  tags: Tags,
 ): string {
-  validate.assertValidKey(key);
-  validate.assertValidTags(tags);
-  validate.assertPosFloat(val);
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidPositiveFloat(val);
+  dialect.assertValidTags(tags);
   return `${key}:${val}|ms${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
@@ -61,14 +62,15 @@ export function buildTimingBody(
  * @returns Data to be sent.
  */
 export function buildAbsGaugeBody(
+  dialect: Dialect,
   key: string,
   val: number,
   sample: number,
-  tags: TagType,
+  tags: Tags,
 ): string {
-  validate.assertValidKey(key);
-  validate.assertValidTags(tags);
-  validate.assertPosFloat(val);
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidPositiveFloat(val);
+  dialect.assertValidTags(tags);
   return `${key}:${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
@@ -84,14 +86,15 @@ export function buildAbsGaugeBody(
  * @returns Data to be sent.
  */
 export function buildRelGaugeBody(
+  dialect: Dialect,
   key: string,
   val: number,
   sample: number,
-  tags: TagType,
+  tags: Tags,
 ): string {
-  validate.assertValidKey(key);
-  validate.assertValidTags(tags);
-  validate.assertFloat(val);
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidSignedFloat(val);
+  dialect.assertValidTags(tags);
   const sign = (val >= 0) ? "+" : ""; // << Positive numbers need a forced sign
   return `${key}:${sign}${val}|g${_sampleStr(sample)}${_tagStr(tags)}`;
 }
@@ -108,13 +111,14 @@ export function buildRelGaugeBody(
  * @returns Data to be sent.
  */
 export function buildSetBody(
+  dialect: Dialect,
   key: string,
   val: string | number,
   sample: number,
-  tags: TagType,
+  tags: Tags,
 ): string {
-  validate.assertValidKey(key);
-  validate.assertValidTags(tags);
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidTags(tags);
   return `${key}:${val}|s${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
@@ -125,10 +129,10 @@ function _sampleStr(sample: number): string {
 }
 
 // Produce the tag string for the tag object:
-function _tagStr(tags: TagType): string {
+function _tagStr(tags: Tags): string {
   const str = Object.keys(tags)
     .filter((key) => tags[key])
-    .map((key) => `${key}:${tags[key]}`)
+    .map((key) => (tags[key] === true) ? key : `${key}:${tags[key]}`)
     .join(",");
   return (str) ? "|#" + str : "";
 }
