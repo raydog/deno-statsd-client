@@ -11,7 +11,7 @@ permsissions, or to enable unstable APIs:
 | If connecting via:  | You'll need:                                |
 | ------------------- | ------------------------------------------- |
 | UDP Datagrams       | `--unstable` `--allow-net`                  |
-| TCP Packets         | `--allow-net`                               |
+| TCP Packets         | `--unstable` `--allow-net`                  |
 | Unix Domain Sockets | `--unstable` `--allow-read` `--allow-write` |
 
 ```ts
