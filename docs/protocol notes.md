@@ -100,7 +100,8 @@ Sample-Rate = "|@", Float-Sample;
 
 (* Tag Rules *)
 Tags = Tag, { ",", Tag };
-Tag = Tag-Key, ":", Tag-Val;
+Tag = Tag-Single | Tag-Key, ":", Tag-Val;
+Tag-Single = String;
 Tag-Key = String;
 Tag-Val = String;
 
@@ -125,3 +126,14 @@ separate datums. So to update the above:
 Packet = { Datum, "\n" };
 String = ? ASCII string without '|', '#', ':', '\n', or ';' ?;
 ```
+
+### UNIX
+
+Same as TCP, but over the wire.
+
+### Datadog
+
+The datadog protocol is actually fairly well documented
+[over here](https://docs.datadoghq.com/developers/dogstatsd/datagram_shell).
+They seem to mostly follow the StatsD approach, but they are more narrow in
+their key format.
