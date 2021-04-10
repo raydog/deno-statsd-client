@@ -81,6 +81,12 @@ export class DatadogDialect implements Dialect {
       }
     }
   }
+
+  assertSupportsHistogram() {
+  }
+
+  assertSupportsDistribution() {
+  }
 }
 
 // Quick-and-dirty assert, to make validation easier:

@@ -8,4 +8,7 @@ export interface Dialect {
   assertValidSignedFloat(val: number): void;
   assertValidPositiveFloat(val: number): void;
   assertValidTags(tags: Tags): void;
+
+  assertSupportsHistogram(): void;
+  assertSupportsDistribution(): void;
 }

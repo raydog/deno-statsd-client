@@ -230,6 +230,74 @@ export class StatsDClient {
   }
 
   /**
+   * Sends a "histogram" metric. A histogram is pretty much the same thing as a timer, but created by datadog, and not
+   * compatible with StatsD.
+   * 
+   * I don't get it either.
+   * 
+   * This extension to the StatsD protocol is only available when the Dialect is "datadog". Normal StatsD setups should
+   * just use the timer metric.
+   * 
+   * @see Docs https://docs.datadoghq.com/developers/metrics/dogstatsd_metrics_submission/#histogram
+   * 
+   * @param key   Metric key
+   * @param value Timing value
+   * @param opts  Extra options
+   */
+  histogram(key: string, value: number, opts?: MetricOpts) {
+    const client = this.getClient();
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      true,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
+    const data = metricFormats.buildHistogramBody(
+      this.#dialect,
+      key,
+      value,
+      sample,
+      tags,
+    );
+    client.queueData(data);
+  }
+
+  /**
+   * Sends a "distribution" metric. A distribution is similar to a timing metric (or a histogram metric), but informs
+   * the service (datadog) to not aggregate the metric in the agent, and instead track the metric globally.
+   * 
+   * This extension to the StatsD protocol is only available when the Dialect is "datadog". Normal StatsD setups should
+   * just use the timer metric.
+   * 
+   * @see Docs https://docs.datadoghq.com/developers/metrics/dogstatsd_metrics_submission/#distribution
+   * 
+   * @param key   Metric key
+   * @param value Timing value
+   * @param opts  Extra options
+   */
+  distribution(key: string, value: number, opts?: MetricOpts) {
+    const client = this.getClient();
+    const sample = _getSampling(
+      this.#globalOpts,
+      opts,
+      true,
+      this.#safeSampleRate,
+    );
+    const tags = _getTags(this.#globalOpts, opts);
+    if (!_doSampling(sample)) return;
+    const data = metricFormats.buildDistributionBody(
+      this.#dialect,
+      key,
+      value,
+      sample,
+      tags,
+    );
+    client.queueData(data);
+  }
+
+  /**
    * Will flush all pending metrics, and close all open sockets.
    * 
    * Any attempts to use this client after close() should error.

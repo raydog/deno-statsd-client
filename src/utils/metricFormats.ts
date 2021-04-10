@@ -122,6 +122,56 @@ export function buildSetBody(
   return `${key}:${val}|s${_sampleStr(sample)}${_tagStr(tags)}`;
 }
 
+/**
+ * Produce the "histogram" string that'd be sent over the wire.
+ * 
+ * @private
+ * @param key Metric key
+ * @param val Histogram value
+ * @param sample Sample rate
+ * @param tags Tag set.
+ * @throws If an input is invalid.
+ * @returns Data to be sent.
+ */
+export function buildHistogramBody(
+  dialect: Dialect,
+  key: string,
+  val: number,
+  sample: number,
+  tags: Tags,
+): string {
+  dialect.assertSupportsHistogram();
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidPositiveFloat(val);
+  dialect.assertValidTags(tags);
+  return `${key}:${val}|h${_sampleStr(sample)}${_tagStr(tags)}`;
+}
+
+/**
+ * Produce the "distribution" string that'd be sent over the wire.
+ * 
+ * @private
+ * @param key Metric key
+ * @param val Distribution value
+ * @param sample Sample rate
+ * @param tags Tag set.
+ * @throws If an input is invalid.
+ * @returns Data to be sent.
+ */
+export function buildDistributionBody(
+  dialect: Dialect,
+  key: string,
+  val: number,
+  sample: number,
+  tags: Tags,
+): string {
+  dialect.assertSupportsDistribution();
+  dialect.assertValidMetricKey(key);
+  dialect.assertValidPositiveFloat(val);
+  dialect.assertValidTags(tags);
+  return `${key}:${val}|d${_sampleStr(sample)}${_tagStr(tags)}`;
+}
+
 // Produce the sample string for the sample-rate:
 function _sampleStr(sample: number): string {
   if (sample >= 1) return "";

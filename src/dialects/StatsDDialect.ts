@@ -95,6 +95,18 @@ export class StatsDDialect implements Dialect {
       }
     }
   }
+
+  assertSupportsHistogram() {
+    throw new StatsDError(
+      "Histograms are only supported in clients with the Datadog dialect. Consider using a timer",
+    );
+  }
+
+  assertSupportsDistribution() {
+    throw new StatsDError(
+      "Distributions are only supported in clients with the Datadog dialect. Consider using a timer",
+    );
+  }
 }
 
 // Quick-and-dirty assert, to make validation easier:
