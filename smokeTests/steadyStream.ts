@@ -23,16 +23,29 @@ await log.setup({
 
 const c = new StatsDClient({
   server: {
-    proto: "tcp",
+    proto: "udp",
   },
+  dialect: "datadog",
 });
 
 let prev = Date.now();
 
-setInterval(sendOne, 500);
+setInterval(sendOne, 100);
 
 function sendOne() {
   const now = Date.now();
-  c.timing("deno.steady-stream", now - prev, { tags: { host: "localhost" } });
+
+  const id = Math.floor(Math.random() * 16 * 16).toString(16).padStart(2, "0")
+    .repeat(12);
+
+  c.unique("deno.sets.blah", id, { tags: { "𝖀𝖓𝖎𝖈𝖔𝖉𝖊": "hello" } });
+  // c.event({
+  //   title: "500 Server Error",
+  //   text: new Error("blah is not defined").stack || "",
+  //   aggregate: "Errors",
+  //   source: "Dunno",
+  //   type: "info",
+  //   tags: { production: true, region: "us_west_2" },
+  // });
   prev = now;
 }

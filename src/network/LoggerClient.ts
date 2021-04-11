@@ -7,7 +7,6 @@ import { log } from "../../deps.ts";
  * @private
  */
 export class LoggerClient implements Client {
-  
   #isClosed = false;
 
   #logger = log.getLogger("statsd");

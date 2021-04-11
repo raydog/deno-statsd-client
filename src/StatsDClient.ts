@@ -8,11 +8,13 @@ import {
   UnixConfig,
 } from "./types/LibConfig.ts";
 import { MetricOpts } from "./types/MetricOpts.ts";
-import * as metricFormats from "./utils/metricFormats.ts";
+import * as formats from "./utils/formats.ts";
 import { StatsDError } from "./StatsDError.ts";
 import { Dialect } from "./types/Dialect.ts";
 import { StatsDDialect } from "./dialects/StatsDDialect.ts";
 import { DatadogDialect } from "./dialects/DatadogDialect.ts";
+import { EventOpts, InternalEventOpts } from "./types/EventOpts.ts";
+import { LoggerClient } from "./network/LoggerClient.ts";
 
 type Tags = { [key: string]: string };
 
@@ -26,6 +28,7 @@ export class StatsDClient {
   #safeSampleRate: boolean;
 
   #dialect: Dialect;
+  #cachedHostname: string | undefined;
 
   // Returns the client. Used to implement a shutdown state:
   private getClient(): Client {
@@ -33,6 +36,23 @@ export class StatsDClient {
       throw new StatsDError("Client is closed");
     }
     return this.#client;
+  }
+
+  // Fetch the current hostname. Cache the result.
+  // If permissions haven't been granted, we'll cache "".
+  private getHostname(): string {
+    if (this.#cachedHostname !== undefined) return this.#cachedHostname;
+
+    try {
+      this.#cachedHostname = Deno.hostname();
+      return this.#cachedHostname;
+    } catch (ex) {
+      if (ex instanceof Deno.errors.PermissionDenied) {
+        this.#cachedHostname = "";
+        return this.#cachedHostname;
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -51,6 +71,7 @@ export class StatsDClient {
     };
     this.#safeSampleRate = conf?.safeSampleRate ?? true;
     this.#dialect = _getDialect(conf);
+    console.log("HOST", this.getHostname());
   }
 
   /**
@@ -78,7 +99,7 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildCountBody(
+    const data = formats.buildCountBody(
       this.#dialect,
       key,
       num,
@@ -113,7 +134,7 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildTimingBody(
+    const data = formats.buildTimingBody(
       this.#dialect,
       key,
       ms,
@@ -151,7 +172,7 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildAbsGaugeBody(
+    const data = formats.buildAbsGaugeBody(
       this.#dialect,
       key,
       value,
@@ -187,7 +208,7 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildRelGaugeBody(
+    const data = formats.buildRelGaugeBody(
       this.#dialect,
       key,
       delta,
@@ -219,7 +240,7 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildSetBody(
+    const data = formats.buildSetBody(
       this.#dialect,
       key,
       value,
@@ -239,6 +260,7 @@ export class StatsDClient {
    * just use the timer metric.
    * 
    * @see Docs https://docs.datadoghq.com/developers/metrics/dogstatsd_metrics_submission/#histogram
+   * @deprecated
    * 
    * @param key   Metric key
    * @param value Timing value
@@ -254,7 +276,7 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildHistogramBody(
+    const data = formats.buildHistogramBody(
       this.#dialect,
       key,
       value,
@@ -265,13 +287,14 @@ export class StatsDClient {
   }
 
   /**
-   * Sends a "distribution" metric. A distribution is similar to a timing metric (or a histogram metric), but informs
-   * the service (datadog) to not aggregate the metric in the agent, and instead track the metric globally.
+   * Sends a "distribution" metric. A distribution seems to be functionally equivalent to a timing metric, but has its
+   * own page in datadog that has been deprecated.
    * 
    * This extension to the StatsD protocol is only available when the Dialect is "datadog". Normal StatsD setups should
    * just use the timer metric.
    * 
    * @see Docs https://docs.datadoghq.com/developers/metrics/dogstatsd_metrics_submission/#distribution
+   * @deprecated
    * 
    * @param key   Metric key
    * @param value Timing value
@@ -287,13 +310,35 @@ export class StatsDClient {
     );
     const tags = _getTags(this.#globalOpts, opts);
     if (!_doSampling(sample)) return;
-    const data = metricFormats.buildDistributionBody(
+    const data = formats.buildDistributionBody(
       this.#dialect,
       key,
       value,
       sample,
       tags,
     );
+    client.queueData(data);
+  }
+
+  event(event: EventOpts) {
+    const client = this.getClient();
+    const host = (typeof event.host === "string")
+      ? event.host
+      : (event.host === false)
+      ? ""
+      : this.getHostname();
+    const ev: InternalEventOpts = {
+      title: event.title,
+      text: event.text,
+      time: event.time ?? new Date(),
+      host,
+      aggregate: event.aggregate,
+      priority: event.priority ?? "normal",
+      source: event.source,
+      type: event.type ?? "info",
+      tags: _getTags(this.#globalOpts, event),
+    };
+    const data = formats.buildEventBody(this.#dialect, ev);
     client.queueData(data);
   }
 
@@ -363,6 +408,9 @@ function _connect(info: LibConfig["server"], maxDelay: number): Client {
       const maxQueue = tcp.maxQueue ?? 100;
       return new SocketClient({ mode: "unix", path, maxQueue, maxDelay });
     }
+
+    case "logger":
+      return new LoggerClient();
   }
 }
 

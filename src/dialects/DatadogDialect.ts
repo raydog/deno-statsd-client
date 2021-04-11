@@ -3,15 +3,24 @@ import { Dialect } from "../types/Dialect.ts";
 import { Tags } from "../types/Tags.ts";
 
 const GOOD_FIRST_CHAR = /^[a-z]/i;
-const BAD_CHARS_RE = /[^a-z0-9_.]/i;
+
+const BAD_KEY_CHAR_RE = /[:|\n]/;
+const NON_ASCII_RE = /[^\x20-\x7e]/;
+const BAD_TAG_KEY_CHAR_RE = /[,|:\n]/;
+const BAD_TAG_VAL_CHAR_RE = /[,|\n]/;
 
 export class DatadogDialect implements Dialect {
   assertValidMetricKey(key: string) {
     _assert(Boolean(key), "Key is required", key);
     _assert(GOOD_FIRST_CHAR.test(key), "Key must start with a letter", key);
     _assert(
-      !BAD_CHARS_RE.test(key),
-      "Key can only contain ASCII alphanumerics, '_', and '.'",
+      !NON_ASCII_RE.test(key),
+      "Key can only contain ASCII characters",
+      key,
+    );
+    _assert(
+      !BAD_KEY_CHAR_RE.test(key),
+      "Key can't have ':', '|', or '\n' characters",
       key,
     );
     _assert(key.length < 200, "Key must be under 200 chars", key);
@@ -31,6 +40,20 @@ export class DatadogDialect implements Dialect {
     _assert(val >= 0, "Value must be 0 or greater", val);
   }
 
+  assertValidSetValue(val: number | string) {
+    if (typeof val === "number") {
+      _assert(!isNaN(val), "Set value can't be NaN", val);
+      _assert(isFinite(val), "Set value must be finite", val);
+    }
+    if (typeof val === "string") {
+      _assert(
+        !BAD_KEY_CHAR_RE.test(val),
+        "Set value cannot include ':', '|', or '\\n'",
+        val,
+      );
+    }
+  }
+
   assertValidTags(tags: Tags) {
     _assert(
       Boolean(tags) && typeof tags === "object",
@@ -44,14 +67,8 @@ export class DatadogDialect implements Dialect {
       // Key
       _assert(Boolean(key), "Tag key is required", val, key);
       _assert(
-        GOOD_FIRST_CHAR.test(key),
-        "Tag key must start with a letter",
-        val,
-        key,
-      );
-      _assert(
-        !BAD_CHARS_RE.test(key),
-        "Tag key can only contain ASCII alphanumerics, '_', and '.'",
+        !BAD_TAG_KEY_CHAR_RE.test(key),
+        "Tag key cannot have ',', '|', ':', or '\\n'",
         val,
         key,
       );
@@ -61,14 +78,8 @@ export class DatadogDialect implements Dialect {
       if (typeof val === "string" && val) {
         _assert(Boolean(val), "Tag value is required", val, key);
         _assert(
-          GOOD_FIRST_CHAR.test(val),
-          "Tag value must start with a letter",
-          val,
-          key,
-        );
-        _assert(
-          !BAD_CHARS_RE.test(val),
-          "Tag value can only contain ASCII alphanumerics, '_', and '.'",
+          !BAD_TAG_VAL_CHAR_RE.test(val),
+          "Tag value cannot have ',', '|', or '\\n'",
           val,
           key,
         );
@@ -86,6 +97,9 @@ export class DatadogDialect implements Dialect {
   }
 
   assertSupportsDistribution() {
+  }
+
+  assertSupportsEvents() {
   }
 }
 

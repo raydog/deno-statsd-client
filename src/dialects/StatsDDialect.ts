@@ -49,6 +49,27 @@ export class StatsDDialect implements Dialect {
     _assert(val >= 0, "Value must be 0 or greater", val);
   }
 
+  assertValidSetValue(val: number | string) {
+    if (typeof val === "number") {
+      _assert(!isNaN(val), "Set value can't be NaN", val);
+      _assert(isFinite(val), "Set value must be finite", val);
+    }
+    if (typeof val === "string") {
+      _assert(
+        !BAD_KEY_CHAR_RE.test(val),
+        "Set value cannot include ';', ':', '#', '|', or '\\n'",
+        val,
+      );
+      if (!this.#isUDP) {
+        _assert(
+          !NON_ASCII_RE.test(val),
+          "Set value must be all printable ASCII characters",
+          val,
+        );
+      }
+    }
+  }
+
   assertValidTags(tags: Tags) {
     _assert(
       Boolean(tags) && typeof tags === "object",
@@ -105,6 +126,12 @@ export class StatsDDialect implements Dialect {
   assertSupportsDistribution() {
     throw new StatsDError(
       "Distributions are only supported in clients with the Datadog dialect. Consider using a timer",
+    );
+  }
+
+  assertSupportsEvents() {
+    throw new StatsDError(
+      "Events are only supported in clients with the Datadog dialect",
     );
   }
 }

@@ -23,8 +23,9 @@ await log.setup({
 
 const c = new StatsDClient({
   server: {
-    proto: "tcp",
+    proto: "logger",
   },
+  dialect: "datadog",
 });
 
 main();
