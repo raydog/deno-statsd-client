@@ -1,5 +1,14 @@
 # Version history
 
+## v0.4.0 (2021-04-11)
+
+- Added a new "logging" server for debugging.
+- Can now select a "dialect" of the StatsD service. (Currently, "statsd" or
+  "datadog".)
+- Added datadog-specific metrics.
+- Added datadog events.
+- Added datadog service checks.
+
 ## v0.3.0 (2021-04-07)
 
 - Add UDP (Unix Domain Socket) support.
