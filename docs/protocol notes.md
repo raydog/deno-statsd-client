@@ -161,3 +161,17 @@ So I'll keep the tag key and value validators the same as the key validator.
 ```ebnf
 String = ? /[a-z][a-z0-9_.]*/i ?;
 ```
+
+### Datadog Events
+
+These packets are reasonably documented
+[here](https://docs.datadoghq.com/developers/dogstatsd/datagram_shell/?tab=events).
+A few notes however:
+
+- Title and text fields support almost any UTF-8 string, since it sends byte
+  lengths for those regions. However, due to an (accidental?) oversight in the
+  format, it actually isn't possible to send a literal `\n` without it being
+  interpretted as a newline. Not a huge problem.
+- The other string fields seems to support any UTF-8 string, but a `|` would
+  really gunk up the event parser in the agent AFAICT. Best to reject those
+  characters.
