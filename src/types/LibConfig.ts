@@ -4,7 +4,7 @@ export interface LibConfig {
   /**
    * How to connect to a Server. If omitted, we'll try to connect to a UDP server on localhost:8125.
    */
-  server?: UDPConfig | TCPConfig | UnixConfig;
+  server?: UDPConfig | TCPConfig | UnixConfig | LoggerConfig;
 
   /**
    * There are many different statistic products out there, that all speak the StatsD protocol, or at least some variant
@@ -146,4 +146,12 @@ export interface UnixConfig {
    * @default 100
    */
   maxQueue?: number;
+}
+
+/**
+ * If the server is set to a "logger" proto, then we'll only log metrics to the standard logger at INFO levels. Useful
+ * for debugging, and if you don't want to actually send anything over the network.
+ */
+export interface LoggerConfig {
+  proto: "logger";
 }
