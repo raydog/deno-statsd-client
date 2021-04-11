@@ -28,24 +28,11 @@ const c = new StatsDClient({
   dialect: "datadog",
 });
 
-let prev = Date.now();
-
-setInterval(sendOne, 100);
+setInterval(sendOne, 1000);
 
 function sendOne() {
-  const now = Date.now();
-
   const id = Math.floor(Math.random() * 16 * 16).toString(16).padStart(2, "0")
     .repeat(12);
 
   c.unique("deno.sets.blah", id, { tags: { "𝖀𝖓𝖎𝖈𝖔𝖉𝖊": "hello" } });
-  // c.event({
-  //   title: "500 Server Error",
-  //   text: new Error("blah is not defined").stack || "",
-  //   aggregate: "Errors",
-  //   source: "Dunno",
-  //   type: "info",
-  //   tags: { production: true, region: "us_west_2" },
-  // });
-  prev = now;
 }
