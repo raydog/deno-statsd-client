@@ -23,9 +23,9 @@ Deno.test("DatadogDialect.assertValidMetricKey rejects bad keys", () => {
     "Key must start",
   );
   asserts.assertThrows(
-    () => d.assertValidMetricKey("foobar*"),
+    () => d.assertValidMetricKey("foobar:"),
     StatsDError,
-    "only contain ASCII",
+    "Key can't have",
   );
   asserts.assertThrows(
     () => d.assertValidMetricKey("lol.𝖀𝖓𝖎𝖈𝖔𝖉𝖊"),
@@ -110,11 +110,50 @@ Deno.test("DatadogDialect.assertValidPositiveFloat rejects bad floats", () => {
   );
 });
 
+Deno.test("DatadogDialect.assertValidSetValue accepts ok values", () => {
+  const d = new DatadogDialect();
+  d.assertValidSetValue(0);
+  d.assertValidSetValue(42);
+  d.assertValidSetValue(-Math.PI);
+  d.assertValidSetValue("foobar");
+  d.assertValidSetValue("𝖀𝖓𝖎𝖈𝖔𝖉𝖊");
+});
+
+Deno.test("DatadogDialect.assertValidSetValue rejects bad values", () => {
+  const d = new DatadogDialect();
+  asserts.assertThrows(
+    () => d.assertValidSetValue(NaN),
+    StatsDError,
+    "can't be NaN",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue(-Infinity),
+    StatsDError,
+    "be finite",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no | bars"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no : colons"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no \n newlines"),
+    StatsDError,
+    "cannot include",
+  );
+});
+
 Deno.test("DatadogDialect.assertValidTags accepts ok tags", () => {
   const d = new DatadogDialect();
   d.assertValidTags({});
   d.assertValidTags({ foo: "bar" });
   d.assertValidTags({ foo: "" });
+  d.assertValidTags({ foo: "colon ok in : values" });
   d.assertValidTags({
     "testing_values": "lol_123",
     "a1234.56": "value_Here",
@@ -143,21 +182,21 @@ Deno.test("DatadogDialect.assertValidTags rejects bad tags", () => {
   asserts.assertThrows(
     () => d.assertValidTags({ "bad:key": "foo" }),
     StatsDError,
-    "only contain ASCII",
+    "cannot have",
+  );
+  asserts.assertThrows(
+    () => d.assertValidTags({ "no|bars": "foo" }),
+    StatsDError,
+    "cannot have",
+  );
+  asserts.assertThrows(
+    () => d.assertValidTags({ "foo": "no|bars" }),
+    StatsDError,
+    "cannot have",
   );
   asserts.assertThrows(
     () => d.assertValidTags({ "host": "bad\nvalue" }),
     StatsDError,
-    "only contain ASCII",
-  );
-  asserts.assertThrows(
-    () => d.assertValidTags({ "blah𝖀𝖓𝖎𝖈𝖔𝖉𝖊": "foobar" }),
-    StatsDError,
-    "only contain ASCII",
-  );
-  asserts.assertThrows(
-    () => d.assertValidTags({ "region": "foo𝖀𝖓𝖎𝖈𝖔𝖉𝖊" }),
-    StatsDError,
-    "only contain ASCII",
+    "cannot have",
   );
 });

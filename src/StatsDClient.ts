@@ -75,7 +75,6 @@ export class StatsDClient {
     };
     this.#safeSampleRate = conf?.safeSampleRate ?? true;
     this.#dialect = _getDialect(conf);
-    console.log("HOST", this.getHostname());
   }
 
   /**

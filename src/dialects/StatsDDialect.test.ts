@@ -168,6 +168,81 @@ Deno.test("StatsDDialect.assertValidPositiveFloat rejects bad floats", () => {
   );
 });
 
+Deno.test("DatadogDialect.assertValidSetValue accepts ok numbers", () => {
+  const d = new StatsDDialect(true);
+  d.assertValidSetValue(0);
+  d.assertValidSetValue(42);
+  d.assertValidSetValue(-Math.PI);
+});
+
+Deno.test("DatadogDialect.assertValidSetValue rejects bad numbers", () => {
+  const d = new StatsDDialect(true);
+  asserts.assertThrows(
+    () => d.assertValidSetValue(NaN),
+    StatsDError,
+    "can't be NaN",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue(-Infinity),
+    StatsDError,
+    "be finite",
+  );
+});
+
+Deno.test("DatadogDialect.assertValidSetValue (UDP) accepts ok strings", () => {
+  const d = new StatsDDialect(true);
+  d.assertValidSetValue("foobar");
+  d.assertValidSetValue("𝖀𝖓𝖎𝖈𝖔𝖉𝖊");
+});
+
+Deno.test("DatadogDialect.assertValidSetValue (UDP) rejects bad strings", () => {
+  const d = new StatsDDialect(true);
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no | bars"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no : colons"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no \n newlines"),
+    StatsDError,
+    "cannot include",
+  );
+});
+
+Deno.test("DatadogDialect.assertValidSetValue (non-UDP) accepts ok strings", () => {
+  const d = new StatsDDialect(false);
+  d.assertValidSetValue("foobar");
+});
+
+Deno.test("DatadogDialect.assertValidSetValue (non-UDP) rejects bad strings", () => {
+  const d = new StatsDDialect(false);
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no | bars"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no : colons"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no \n newlines"),
+    StatsDError,
+    "cannot include",
+  );
+  asserts.assertThrows(
+    () => d.assertValidSetValue("no 𝖀𝖓𝖎𝖈𝖔𝖉𝖊"),
+    StatsDError,
+    "ASCII",
+  );
+});
+
 Deno.test("StatsDDialect.assertValidTags (non-UDP) accepts ok tags", () => {
   const d = new StatsDDialect(false);
   d.assertValidTags({});

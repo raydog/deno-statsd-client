@@ -20,7 +20,7 @@ export class DatadogDialect implements Dialect {
     );
     _assert(
       !BAD_KEY_CHAR_RE.test(key),
-      "Key can't have ':', '|', or '\n' characters",
+      "Key can't have ':', '|', or '\\n' characters",
       key,
     );
     _assert(key.length < 200, "Key must be under 200 chars", key);
