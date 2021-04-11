@@ -146,15 +146,19 @@ For keys:
 - While other chars are converted to "_"s inside the service, the golang agent
   code does a Bytes.Index() search which returns the first index of a char, so
   ":"s in keys will jank up parsing. And if there are > 3 "|" chars, it'll
-  reject. So we should be fairly restrictive in the metrics we send, and not
-  just send fields anyways, and depend on datadog normalizing things.
+  reject. We could be super-restrictive in the metrics we accept, but that's
+  actually pretty unpleasant to work with, so let's just reject the REALLY
+  broken keys, but we can still accept the majority of keys, and just lean on
+  datadog's normalization.
 - Also, keep keys under 200 chars.
 
 For Tags, I couldn't find real docs about the specific field formats. However:
 
 - "|" presense would totally b0rk the overall metric validator.
-- "," is strictly split on in the tag parser. ":" is not parsed inside the tag
-  stuff.
+- "," is strictly split on in the tag parser, so it'd mess up parsing.
+- ":" is not parsed inside the tag stuff, and from my experimentation, datadog's
+  server-side handles ":"s in the value correctly. (Not in the key tho)
+- Unicode seems to work just fine.
 
 So I'll keep the tag key and value validators the same as the key validator.
 

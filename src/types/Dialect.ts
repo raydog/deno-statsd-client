@@ -13,4 +13,5 @@ export interface Dialect {
   assertSupportsHistogram(): void;
   assertSupportsDistribution(): void;
   assertSupportsEvents(): void;
+  assertSupportsServiceChecks(): void;
 }
