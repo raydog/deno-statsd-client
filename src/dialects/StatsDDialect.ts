@@ -134,6 +134,12 @@ export class StatsDDialect implements Dialect {
       "Events are only supported in clients with the Datadog dialect",
     );
   }
+
+  assertSupportsServiceChecks() {
+    throw new StatsDError(
+      "Service checks are only supported in clients with the Datadog dialect",
+    );
+  }
 }
 
 // Quick-and-dirty assert, to make validation easier:

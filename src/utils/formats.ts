@@ -2,6 +2,7 @@ import { Dialect } from "../types/Dialect.ts";
 import { Tags } from "../types/Tags.ts";
 import { InternalEventOpts } from "../types/EventOpts.ts";
 import { StatsDError } from "../StatsDError.ts";
+import { InternalServiceCheckOpts } from "../types/ServiceCheckOpts.ts";
 
 const TE = new TextEncoder();
 const BAD_EVENT_CHARS_RE = /[|\n]/;
@@ -179,8 +180,7 @@ export function buildDistributionBody(
 }
 
 /**
- * Will format an event for datadog.
- * 
+ * Will format an event for datadog. 
  */
 export function buildEventBody(
   dialect: Dialect,
@@ -215,6 +215,35 @@ export function buildEventBody(
   ].filter(Boolean).join("|");
 }
 
+/**
+ * Will format a service check for datadog.
+ */
+export function buildServiceCheckBody(
+  dialect: Dialect,
+  sc: InternalServiceCheckOpts,
+): string {
+  dialect.assertSupportsEvents();
+  dialect.assertValidTags(sc.tags);
+
+  const namePart = serviceCheckField("name", sc.name);
+  const statusPart = String(_serviceCheckStatus(sc.status));
+  const timePart = "d:" + _unix(sc.time);
+  const hostPart = sc.host && "h:" + serviceCheckField("host", sc.host);
+  const tagsPart = _tagStr(sc.tags, false);
+  const messagePart = sc.message &&
+    "m:" + serviceCheckField("message", sc.message);
+
+  return [
+    "_sc",
+    namePart,
+    statusPart,
+    timePart,
+    hostPart,
+    tagsPart,
+    messagePart,
+  ].filter(Boolean).join("|");
+}
+
 function _unix(d: Date): number {
   return Math.floor(d.valueOf() / 1000);
 }
@@ -236,6 +265,17 @@ function eventField(name: string, str: string): string {
   return str;
 }
 
+function serviceCheckField(name: string, str: string): string {
+  // These fields support unicode, but a "|" or "\n" would mess up the agent parsing, so reject if we find any:
+  if (BAD_EVENT_CHARS_RE.test(str)) {
+    throw new StatsDError(
+      `Service check's ${name} field can't have any '|' or '\n' characters in it`,
+    );
+  }
+
+  return str;
+}
+
 // Produce the sample string for the sample-rate:
 function _sampleStr(sample: number): string {
   if (sample >= 1) return "";
@@ -250,4 +290,19 @@ function _tagStr(tags: Tags, includeBar = true): string {
     .join(",");
   const prefix = includeBar ? "|#" : "#";
   return (str) ? prefix + str : "";
+}
+
+function _serviceCheckStatus(status: string): number {
+  switch (status.toLowerCase()) {
+    case "ok":
+      return 0;
+    case "warn":
+    case "warning":
+      return 1;
+    case "crit":
+    case "critical":
+      return 2;
+    default:
+      return 3;
+  }
 }

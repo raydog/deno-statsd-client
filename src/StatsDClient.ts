@@ -15,6 +15,10 @@ import { StatsDDialect } from "./dialects/StatsDDialect.ts";
 import { DatadogDialect } from "./dialects/DatadogDialect.ts";
 import { EventOpts, InternalEventOpts } from "./types/EventOpts.ts";
 import { LoggerClient } from "./network/LoggerClient.ts";
+import {
+  InternalServiceCheckOpts,
+  ServiceCheckOpts,
+} from "./types/ServiceCheckOpts.ts";
 
 type Tags = { [key: string]: string };
 
@@ -339,6 +343,25 @@ export class StatsDClient {
       tags: _getTags(this.#globalOpts, event),
     };
     const data = formats.buildEventBody(this.#dialect, ev);
+    client.queueData(data);
+  }
+
+  serviceCheck(check: ServiceCheckOpts) {
+    const client = this.getClient();
+    const host = (typeof check.host === "string")
+      ? check.host
+      : (check.host === false)
+      ? ""
+      : this.getHostname();
+    const opts: InternalServiceCheckOpts = {
+      name: check.name,
+      status: check.status,
+      time: check.time ?? new Date(),
+      host,
+      tags: _getTags(this.#globalOpts, check),
+      message: check.message ?? "",
+    };
+    const data = formats.buildServiceCheckBody(this.#dialect, opts);
     client.queueData(data);
   }
 

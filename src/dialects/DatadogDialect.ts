@@ -101,6 +101,9 @@ export class DatadogDialect implements Dialect {
 
   assertSupportsEvents() {
   }
+
+  assertSupportsServiceChecks() {
+  }
 }
 
 // Quick-and-dirty assert, to make validation easier:
