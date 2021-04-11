@@ -1,7 +1,9 @@
 # deno-statsd-client
 
 A simple StatsD client for Deno. Supports the official stat metrics (counts,
-timings, gauges, sets), as well as both TCP and UDP connections.
+timings, gauges, sets), a few datadog extensions (histogram, distribution,
+events, service checks) as well as both TCP, UDP, and unix domain socket
+connections.
 
 **Deno command-line args**:
 
@@ -77,7 +79,7 @@ client.unique("users.unique", user.id);
     to increase the number of metrics in each TCP frame. However, if the backlog
     exceeds this number of metrics, we'll send the items sooner.
 
-  If connection via a Unix domain socket:
+  If connecting via a Unix domain socket:
 
   - `proto`: `"unix"`
   - `path` (string)
@@ -86,6 +88,10 @@ client.unique("users.unique", user.id);
     Sent metrics are queued up for a short bit (see: maxDelayMs) before sending,
     to decrease the number of filesystem writes. However, if the backlog exceeds
     this number of items, we'll send the items sooner.
+
+  If you don't _actually_ want to connect, but instead just log every metric:
+
+  - `proto`: `"logger"`
 
 - `sampleRate` (number?) (Default: 1.0)
 
@@ -194,6 +200,23 @@ client.unique("users.unique", user.id);
   // Track distinct authenticated users
   client.unique("users.distinct", user.id);
   ```
+
+- `histogram(key: string, value: number, opts?: MetricOpts)`
+
+  (Datadog-only)
+
+  Sends a "histogram" metric. A histogram is pretty much the same thing as a
+  timer, but created by datadog, and not compatible with StatsD.
+
+  I don't get it either.
+
+- `distribution(key: string, value: number, opts?: MetricOpts)`
+
+  (Datadog-only)
+
+  Sends a "distribution" metric. A distribution seems to be functionally
+  equivalent to a timing metric, but has its own page in datadog that has been
+  deprecated.
 
 - `async close(): Promise<void>`
 
