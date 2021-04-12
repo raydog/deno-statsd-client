@@ -2,12 +2,12 @@
 
 ## v0.4.0 (2021-04-11)
 
-- Added a new "logging" server for debugging.
 - Can now select a "dialect" of the StatsD service. (Currently, "statsd" or
   "datadog".)
-- Added datadog-specific metrics.
+- Added datadog-specific metrics and validation.
 - Added datadog events.
 - Added datadog service checks.
+- Added a new "logger" server config for debugging.
 
 ## v0.3.0 (2021-04-07)
 
