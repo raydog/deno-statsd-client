@@ -19,8 +19,7 @@ import {
   InternalServiceCheckOpts,
   ServiceCheckOpts,
 } from "./types/ServiceCheckOpts.ts";
-
-type Tags = { [key: string]: string };
+import { Tags } from "./types/Tags.ts";
 
 /**
  * StatsD client. Use this to send data to a StatsD-speaking backend.
@@ -323,6 +322,23 @@ export class StatsDClient {
     client.queueData(data);
   }
 
+  /**
+   * Sends an "event" to datadog.
+   * 
+   * This method will only work if the dialect is "datadog".
+   * 
+   * @example
+   *   // Send an exception to datadog:
+   *   client.event({
+   *     title: "Unexpected Error",
+   *     text: err.stack || "",
+   *     aggregate: "Errors",
+   *     source: "database",
+   *     type: "error",
+   *   });
+   * 
+   * @param event Event options
+   */
   event(event: EventOpts) {
     const client = this.getClient();
     const host = (typeof event.host === "string")
@@ -345,6 +361,22 @@ export class StatsDClient {
     client.queueData(data);
   }
 
+  /**
+   * Sends a "service check" to datadog.
+   * 
+   * This method will only work if the dialect is "datadog".
+   * 
+   * @example
+   *   // Send a critical redis outage to datadog.
+   *   client.serviceCheck({
+   *     name: "Redis connection",
+   *     status: "critical",
+   *     tags: { env: "production" },
+   *     message: "Redis connection timed out after 10s"
+   *   });
+   * 
+   * @param check Service check options
+   */
   serviceCheck(check: ServiceCheckOpts) {
     const client = this.getClient();
     const host = (typeof check.host === "string")
@@ -396,7 +428,7 @@ function _getTags(
   return {
     ...globalOpts.tags,
     ...metricOpts?.tags,
-  } as Tags;
+  };
 }
 
 // Return true if we should send this metric, based on the sampling rates, and the metric in question:

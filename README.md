@@ -1,9 +1,10 @@
 # deno-statsd-client
 
-A simple StatsD client for Deno. Supports the official stat metrics (counts,
-timings, gauges, sets), a few datadog extensions (histogram, distribution,
-events, service checks) as well as both TCP, UDP, and unix domain socket
-connections.
+A simple StatsD client for Deno.
+
+Supports the official stat metrics (counts, timings, gauges, sets), a few
+datadog extensions (histogram, distribution, events, service checks) as well as
+both TCP, UDP, and unix domain socket connections.
 
 **Deno command-line args**:
 
@@ -217,6 +218,118 @@ client.unique("users.unique", user.id);
   Sends a "distribution" metric. A distribution seems to be functionally
   equivalent to a timing metric, but has its own page in datadog that has been
   deprecated.
+
+- `event(event: EventOpts)`
+
+  (Datadog-only)
+
+  Sends an "event" to datadog.
+
+  ```ts
+  // Send an exception to datadog:
+  client.event({
+    title: "Unexpected Error",
+    text: err.stack || "",
+    aggregate: "Errors",
+    source: "database",
+    type: "error",
+  });
+  ```
+
+  This method only takes a single argument with these properties:
+
+  - `title` (string)
+
+    Title of the event.
+
+  - `text` (string)
+
+    Event text.
+
+  - `time` (Date?) (Default: `new Date()`)
+
+    Timestamp for the event.
+
+    If omitted, we'll use the current time, so only send this if you're
+    submitting an event retroactively.
+
+  - `host` (string | false) (Default: `Deno.hostname()`)
+
+    The hostname for the event.
+
+    If omitted, we'll use `Deno.hostname()` if the current process has
+    environment permissions. Else the param will not be sent with the event. If
+    you wish to omit hostname from the event, use the value `false`.
+
+  - `aggregate` (string?)
+
+    An aggregation key for the event. Similar events will be grouped in datadog
+    by this key.
+
+  - `priority`: ("normal" | "low") (Default: "normal")
+
+    A priority level for this event.
+
+  - `source`: (string?)
+
+    A source name for this event.
+
+  - `type`: ("error" | "warning" | "info" | "success")
+
+    An alert type for this event.
+
+  - `tags`: (Object?)
+
+    Tags that will be attached to this event.
+
+- `serviceCheck(check: ServiceCheckOpts)`
+
+  (Datadog-only)
+
+  Sends a "service check" to datadog.
+
+  ```ts
+  // Send a critical redis outage to datadog.
+  client.serviceCheck({
+    name: "Redis connection",
+    status: "critical",
+    tags: { env: "production" },
+    message: "Redis connection timed out after 10s",
+  });
+  ```
+
+  This method only takes a single argument with these properties:
+
+  - `name` (string)
+
+    Name of the service check
+
+  - `status`: ("ok" | "warning" | "critical" | "unknown")
+
+    Service check status.
+
+  - `time` (Date?) (Default: `new Date()`)
+
+    Timestamp for the service check.
+
+    Default is "now", so only supply this if submitting a service check
+    retroactively.
+
+  - `host` (string | false) (Default: `Deno.hostname()`)
+
+    The hostname for this service check.
+
+    If omitted, we'll use `Deno.hostname()` if the current process has
+    environment permissions. Else the param will not be sent with the event. If
+    you wish to omit hostname from the event, use the value `false`.
+
+  - `tags`: (Object?)
+
+    Tags for this service check.
+
+  - `message`: (string?)
+
+    A message describing the current status.
 
 - `async close(): Promise<void>`
 
