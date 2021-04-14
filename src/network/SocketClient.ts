@@ -198,7 +198,10 @@ export class SocketClient implements Client {
   private async _tcpConnect(): Promise<Deno.Conn> {
     for (const retryMs of exponentialBackoff()) {
       try {
-        return await Deno.connect(this.#opts);
+        // Note: the Deno.ConnectOptions cast is not 100% accurate, as the opts could be a unix config as well. However,
+        // typescript is rejecting the param, since our property (which can store either) doesn't satisfy BOTH types.
+        // Not sure what changed with the new Deno version, but this cast shuts it up, since using this param is safe.
+        return await Deno.connect(this.#opts as Deno.ConnectOptions);
       } catch (ex) {
         this.#logger.error(
           `StatsD.TCP: Failed to connect: write: ${ex.message}. Retrying in ${retryMs /
