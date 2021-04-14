@@ -1,5 +1,10 @@
 # Version history
 
+## v0.4.1 (2021-04-13)
+
+- Bump std to 0.93.0.
+- Fix a minor type issue that cropped up with Deno 1.9.0.
+
 ## v0.4.0 (2021-04-11)
 
 - Can now select a "dialect" of the StatsD service. (Currently, "statsd" or

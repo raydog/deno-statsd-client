@@ -18,7 +18,7 @@ permsissions, or to enable unstable APIs:
 | Unix Domain Sockets | `--unstable` `--allow-read` `--allow-write` |
 
 ```ts
-import { StatsDClient } from "https://deno.land/x/statsd@0.4.0/mod.ts";
+import { StatsDClient } from "https://deno.land/x/statsd@0.4.1/mod.ts";
 
 const client = new StatsDClient({
   server: {
