@@ -131,6 +131,24 @@ client.unique("users.unique", user.id);
   Tags are key-value pairs that are appended to each metric. Values need to be
   strings. If a value is the empty string, that tag will be skipped.
 
+- `logger`: (Logger?) (Default: no logging)
+
+  This library will not log anything by default. However, if you'd get a little
+  more feedback about how the StatsD connection is going, you can get that by
+  providing a logger object here. The typescript types of this parameter is
+  pretty general, but should be compatible with most versions of the std
+  library's logger:
+
+  ```ts
+  import * as log from "https://deno.land/std@0.95.0/log/mod.ts";
+
+  await log.setup({ ... })
+
+  const c = new StatsDClient({
+    logger: log.getLogger("statsd"),
+  });
+  ```
+
 ## Client Methods
 
 - `count(key: string, num, opts?: MetricOpts)`
@@ -346,27 +364,3 @@ Some params can be overridden for each metric with the MetricOpts object.
 - `sampleRate` - To use a custom sampleRate for this metric.
 - `tags` - To add some extra tags to this metric. (They are merged with the
   global tags)
-
-### Logging
-
-This library uses the std library's logger for its own internal logging. If
-those logs would be useful for debugging, then the `statsd` logger can be
-configured like so:
-
-```ts
-import * as log from "https://deno.land/std@0.92.0/log/mod.ts";
-
-await log.setup({
-  handlers: {
-    console: new log.handlers.ConsoleHandler("DEBUG"),
-  },
-  loggers: {
-    statsd: {
-      level: "INFO",
-      handlers: ["console"],
-    },
-  },
-});
-```
-
-Be sure to do this BEFORE initializing the `StatsDClient`.
