@@ -1,8 +1,8 @@
 import { Client } from "../types/Client.ts";
 import { StatsDError } from "../StatsDError.ts";
 import { exponentialBackoff } from "../utils/exponentialBackoff.ts";
-import { log } from "../../deps.ts";
 import { describeAddr } from "../utils/describeAddr.ts";
+import { Logger } from "../types/Logger.ts";
 
 const encoder: TextEncoder = new TextEncoder();
 
@@ -12,6 +12,7 @@ type TCPOpts = {
   port: number;
   maxQueue: number;
   maxDelay: number;
+  logger: Logger;
 };
 
 type UnixOpts = {
@@ -19,6 +20,7 @@ type UnixOpts = {
   path: string;
   maxQueue: number;
   maxDelay: number;
+  logger: Logger;
 };
 
 /**
@@ -39,12 +41,13 @@ export class SocketClient implements Client {
   #queue: string[] = [];
   #flushPromise: Promise<void> | null = null;
 
-  #logger = log.getLogger("statsd");
+  #logger: Logger;
 
   // Simple constructor:
   constructor(opts: TCPOpts | UnixOpts) {
     this.#maxQueue = opts.maxQueue;
     this.#maxDelay = opts.maxDelay;
+    this.#logger = opts.logger;
     switch (opts.mode) {
       case "tcp":
         this.#opts = {

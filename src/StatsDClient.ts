@@ -20,6 +20,7 @@ import {
   ServiceCheckOpts,
 } from "./types/ServiceCheckOpts.ts";
 import { Tags } from "./types/Tags.ts";
+import { Logger } from "./types/Logger.ts";
 
 /**
  * StatsD client. Use this to send data to a StatsD-speaking backend.
@@ -32,6 +33,7 @@ export class StatsDClient {
 
   #dialect: Dialect;
   #cachedHostname: string | undefined;
+  #logger: Logger;
 
   // Returns the client. Used to implement a shutdown state:
   private getClient(): Client {
@@ -66,14 +68,20 @@ export class StatsDClient {
    * @param conf Settings.
    */
   constructor(conf?: LibConfig) {
-    const maxDelay = conf?.maxDelayMs ?? 1000;
-    this.#client = _connect(conf?.server, maxDelay);
     this.#globalOpts = {
       sampleRate: conf?.sampleRate ?? 1.0,
       tags: conf?.globalTags ?? {},
     };
     this.#safeSampleRate = conf?.safeSampleRate ?? true;
     this.#dialect = _getDialect(conf);
+    this.#logger = conf?.logger || {
+      debug() {},
+      info() {},
+      warning() {},
+      error() {},
+    };
+    const maxDelay = conf?.maxDelayMs ?? 1000;
+    this.#client = _connect(conf?.server, maxDelay, this.#logger);
   }
 
   /**
@@ -436,7 +444,11 @@ function _doSampling(rate: number): boolean {
   return (rate >= 1 || Math.random() < rate);
 }
 
-function _connect(info: LibConfig["server"], maxDelay: number): Client {
+function _connect(
+  info: LibConfig["server"],
+  maxDelay: number,
+  logger: Logger,
+): Client {
   const proto = info?.proto || null;
   switch (proto) {
     case null:
@@ -445,7 +457,7 @@ function _connect(info: LibConfig["server"], maxDelay: number): Client {
       const host = udp?.host ?? "localhost";
       const port = udp?.port ?? 8125;
       const mtu = udp?.mtu ?? 1500;
-      return new UDPClient({ host, port, mtu, maxDelay });
+      return new UDPClient({ host, port, mtu, maxDelay, logger });
     }
 
     case "tcp": {
@@ -453,18 +465,31 @@ function _connect(info: LibConfig["server"], maxDelay: number): Client {
       const host = tcp.host ?? "localhost";
       const port = tcp.port ?? 8125;
       const maxQueue = tcp.maxQueue ?? 100;
-      return new SocketClient({ mode: "tcp", host, port, maxQueue, maxDelay });
+      return new SocketClient({
+        mode: "tcp",
+        host,
+        port,
+        maxQueue,
+        maxDelay,
+        logger,
+      });
     }
 
     case "unix": {
       const tcp = info as UnixConfig;
       const path = tcp.path;
       const maxQueue = tcp.maxQueue ?? 100;
-      return new SocketClient({ mode: "unix", path, maxQueue, maxDelay });
+      return new SocketClient({
+        mode: "unix",
+        path,
+        maxQueue,
+        maxDelay,
+        logger,
+      });
     }
 
     case "logger":
-      return new LoggerClient();
+      return new LoggerClient({ logger });
   }
 }
 

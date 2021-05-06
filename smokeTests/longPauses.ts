@@ -1,5 +1,5 @@
 import { StatsDClient } from "../mod.ts";
-import { log } from "../deps.ts";
+import { log } from "../testDeps.ts";
 
 /*
  * Envirnoment: StatsD server, running in docker.

@@ -1,5 +1,5 @@
 import { Client } from "../types/Client.ts";
-import { log } from "../../deps.ts";
+import { Logger } from "../types/Logger.ts";
 
 /**
  * Client that only delivers packets to the log.
@@ -9,9 +9,10 @@ import { log } from "../../deps.ts";
 export class LoggerClient implements Client {
   #isClosed = false;
 
-  #logger = log.getLogger("statsd");
+  #logger: Logger;
 
-  constructor() {
+  constructor({ logger }: { logger: Logger }) {
+    this.#logger = logger;
   }
 
   queueData(data: string) {
