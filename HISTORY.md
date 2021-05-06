@@ -1,5 +1,9 @@
 # Version history
 
+## v0.5.0 (2021-05-06)
+
+- Allow custom loggers to be injected. Stop relying on std.
+
 ## v0.4.1 (2021-04-13)
 
 - Bump std to 0.93.0.

@@ -1,6 +1,6 @@
 import { Client } from "../types/Client.ts";
 import { StatsDError } from "../StatsDError.ts";
-import { log } from "../../deps.ts";
+import { Logger } from "../types/Logger.ts";
 import { describeAddr } from "../utils/describeAddr.ts";
 
 const encoder: TextEncoder = new TextEncoder();
@@ -10,6 +10,7 @@ type ConstructorOpts = {
   port: number;
   mtu: number;
   maxDelay: number;
+  logger: Logger;
 };
 
 /**
@@ -29,16 +30,17 @@ export class UDPClient implements Client {
   #buffer: Uint8Array;
   #idx = 0;
 
-  #logger = log.getLogger("statsd");
+  #logger: Logger;
 
   // Simple constructor:
-  constructor({ host, port, mtu, maxDelay }: ConstructorOpts) {
+  constructor({ host, port, mtu, maxDelay, logger }: ConstructorOpts) {
     this.#addr = {
       transport: "udp",
       hostname: host,
       port: port,
     };
-    this.#conn = _connectUDP(this.#addr);
+    this.#conn = _connectUDP();
+    this.#logger = logger;
     this.#logger.info(
       `StatsD.UDP: Connected via ${describeAddr(this.#conn.addr)}`,
     );
@@ -101,10 +103,10 @@ export class UDPClient implements Client {
   private async _write(data: Uint8Array): Promise<void> {
     const num = await this.#conn.send(data, this.#addr);
 
-    this.#logger.debug(() =>
+    this.#logger.debug(
       `StatsD.UDP: Sending ${data.byteLength}-byte packet to ${
         describeAddr(this.#addr)
-      }`
+      }`,
     );
 
     if (num < 0) {
@@ -123,7 +125,7 @@ export class UDPClient implements Client {
   }
 }
 
-function _connectUDP(addr: Deno.NetAddr): Deno.DatagramConn {
+function _connectUDP(): Deno.DatagramConn {
   if (!Deno.listenDatagram) {
     throw new StatsDError(
       "Cannot connect to UDP. Try enabling unstable APIs with '--unstable'",

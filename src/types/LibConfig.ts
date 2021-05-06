@@ -1,4 +1,5 @@
 import { Tags } from "./Tags.ts";
+import { Logger } from "./Logger.ts";
 
 export interface LibConfig {
   /**
@@ -60,6 +61,23 @@ export interface LibConfig {
    * @default {}
    */
   globalTags?: Tags;
+
+  /**
+   * This library will not log anything by default. However, if you'd get a little more feedback about how the StatsD
+   * connection is going, you can get that by providing a logger object here. The type of this parameter is pretty
+   * vague, but should be compatible with most versions of the std library's logger:
+   * 
+   * @example
+   *   import * as log from "https://deno.land/std@0.95.0/log/mod.ts";
+   *
+   *   await log.setup({ ... })
+   *
+   *   const c = new StatsDClient({
+   *     ...
+   *     logger: log.getLogger("statsd"),
+   *   });
+   */
+  logger?: Logger;
 }
 
 /**
