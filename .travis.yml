@@ -1,0 +1,13 @@
+language: default
+os:
+  - ubuntu
+  # - osx
+  # Note: osx seems to exhibit some of the strange lockups that I saw in github's actions.
+  # Namely, that UDP packets fail to send, causing test timeouts. Research more later.
+before_install:
+  - pwd
+  - curl -fsSL https://deno.land/x/install/install.sh | sh
+  - export DENO_INSTALL="$HOME/.deno"
+  - export PATH="$DENO_INSTALL/bin:$PATH"
+script: 
+  - deno test -A --unstable

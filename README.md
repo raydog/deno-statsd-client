@@ -1,5 +1,7 @@
 # deno-statsd-client
 
+[![Build Status](https://travis-ci.com/raydog/deno-statsd-client.svg?branch=main)](https://travis-ci.com/raydog/deno-statsd-client)
+
 A simple StatsD client for Deno.
 
 Supports the official stat metrics (counts, timings, gauges, sets), a few
