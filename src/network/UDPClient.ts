@@ -39,7 +39,7 @@ export class UDPClient implements Client {
       hostname: host,
       port: port,
     };
-    this.#conn = _connectUDP(this.#addr);
+    this.#conn = _connectUDP();
     this.#logger = logger;
     this.#logger.info(
       `StatsD.UDP: Connected via ${describeAddr(this.#conn.addr)}`,
@@ -125,7 +125,7 @@ export class UDPClient implements Client {
   }
 }
 
-function _connectUDP(addr: Deno.NetAddr): Deno.DatagramConn {
+function _connectUDP(): Deno.DatagramConn {
   if (!Deno.listenDatagram) {
     throw new StatsDError(
       "Cannot connect to UDP. Try enabling unstable APIs with '--unstable'",
