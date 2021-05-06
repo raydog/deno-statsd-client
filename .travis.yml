@@ -1,5 +1,7 @@
 language: default
-os: ubuntu
+os:
+  - ubuntu
+  - osx
 before_install:
   - pwd
   - curl -fsSL https://deno.land/x/install/install.sh | sh
