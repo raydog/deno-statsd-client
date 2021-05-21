@@ -1,4 +1,4 @@
-import { StatsDClient } from "../mod.ts";
+import * as mod from "../mod.ts";
 import { log } from "../testDeps.ts";
 
 /*
@@ -21,10 +21,12 @@ await log.setup({
   },
 });
 
-const c = new StatsDClient({
+
+const c = new mod.StatsDClient({
   server: {
     proto: "tcp",
   },
+  logger: log.getLogger("statsd"),
 });
 
 let prev = Date.now();
