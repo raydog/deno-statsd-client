@@ -1,9 +1,9 @@
 /**
  * Describes the given Deno address. Used for logging.
- * 
+ *
  * @private
- * @param addr 
- * @returns 
+ * @param addr
+ * @returns
  */
 export function describeAddr(
   addr: Deno.Addr | Deno.ConnectOptions | Deno.UnixConnectOptions,

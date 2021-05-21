@@ -9,7 +9,7 @@ const BAD_EVENT_CHARS_RE = /[|\n]/;
 
 /**
  * Produce the "count" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Metric value (default is 1)
@@ -34,7 +34,7 @@ export function buildCountBody(
 
 /**
  * Produce the "timing" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Metric value (Must be positive.)
@@ -58,7 +58,7 @@ export function buildTimingBody(
 
 /**
  * Produce the absolute "gauge" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Metric value (Must be positive.)
@@ -82,7 +82,7 @@ export function buildAbsGaugeBody(
 
 /**
  * Produce the relative "gauge" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Metric delta
@@ -107,7 +107,7 @@ export function buildRelGaugeBody(
 
 /**
  * Produce the "set" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Set value
@@ -131,7 +131,7 @@ export function buildSetBody(
 
 /**
  * Produce the "histogram" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Histogram value
@@ -156,7 +156,7 @@ export function buildHistogramBody(
 
 /**
  * Produce the "distribution" string that'd be sent over the wire.
- * 
+ *
  * @private
  * @param key Metric key
  * @param val Distribution value
@@ -180,7 +180,7 @@ export function buildDistributionBody(
 }
 
 /**
- * Will format an event for datadog. 
+ * Will format an event for datadog.
  */
 export function buildEventBody(
   dialect: Dialect,

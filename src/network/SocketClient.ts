@@ -25,7 +25,7 @@ type UnixOpts = {
 
 /**
  * Client used to send data over either Unix or TCP sockets.
- * 
+ *
  * @private
  */
 export class SocketClient implements Client {

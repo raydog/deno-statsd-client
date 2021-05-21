@@ -3,9 +3,9 @@ import { log } from "../testDeps.ts";
 
 /*
  * Envirnoment: StatsD server, running in docker.
- * 
+ *
  * `deno --unstable run --allow-net --allow-env highFrequency.ts`
- * 
+ *
  * Tests to make sure that the UDP buffer being flushed frequency doesn't lose data. Or that TCP can keep up.
  */
 

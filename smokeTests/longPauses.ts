@@ -3,9 +3,9 @@ import { log } from "../testDeps.ts";
 
 /*
  * Envirnoment: StatsD server, running in docker.
- * 
+ *
  * `deno --unstable run --allow-net --allow-env longPauses.ts`
- * 
+ *
  * Tests to make sure that long pauses between sending still arrive at the server.
  */
 
@@ -20,7 +20,6 @@ await log.setup({
     },
   },
 });
-
 
 const c = new mod.StatsDClient({
   server: {

@@ -15,7 +15,7 @@ type ConstructorOpts = {
 
 /**
  * Client used to send data over UDP.
- * 
+ *
  * @private
  */
 export class UDPClient implements Client {

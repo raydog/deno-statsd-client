@@ -6,42 +6,42 @@ import { Tags } from "./Tags.ts";
 export interface EventOpts {
   /**
    * Title of the event.
-   * 
+   *
    * @example "An exception occurred"
    */
   title: string;
 
   /**
    * Event text.
-   * 
+   *
    * @example "Cannot parse CSV file from xyz"
    */
   text: string;
 
   /**
    * Timestamp for the event.
-   * 
+   *
    * If omitted, we'll use the current time, so only send this if you're submitting an event retroactively.
-   * 
+   *
    * @example new Date("2020-01-02T03:04:05.678Z")
    */
   time?: Date;
 
   /**
    * The hostname for the event.
-   * 
+   *
    * If omitted, we'll use `Deno.hostname()` if the current process has environment permissions. Else the param will not
    * be sent with the event. If you wish to omit hostname from the event, use the value `false`.
-   * 
+   *
    * @example "api-server-42"
    */
   host?: string | false;
 
   /**
    * An aggregation key for the event.
-   * 
+   *
    * Similar events will be grouped in datadog by this key.
-   * 
+   *
    * @example "exception"
    */
   aggregate?: string;

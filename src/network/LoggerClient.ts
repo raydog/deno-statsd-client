@@ -3,7 +3,7 @@ import { Logger } from "../types/Logger.ts";
 
 /**
  * Client that only delivers packets to the log.
- * 
+ *
  * @private
  */
 export class LoggerClient implements Client {

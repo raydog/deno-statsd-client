@@ -1,6 +1,6 @@
 /**
  * A generic connection to an external server. Encapsulates all the raw transport deets.
- * 
+ *
  * @private
  */
 export interface Client {

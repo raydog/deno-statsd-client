@@ -62,9 +62,9 @@ export class StatsDClient {
 
   /**
    * Build a new client. This client will have its own connection to the remote StatsD server.
-   * 
+   *
    * If no config object is passed in, we'll 100% fall back on default settings. (localhost:8125, UDP, ...)
-   * 
+   *
    * @param conf Settings.
    */
   constructor(conf?: LibConfig) {
@@ -86,15 +86,15 @@ export class StatsDClient {
 
   /**
    * Send a "count" metric. This is used to track the number of things.
-   * 
+   *
    * @example
    *   // Count the number of times a route was used:
    *  client.count("routes.get_api_resource");
-   * 
+   *
    * @example
    *   // Count the number of items purchased:
    *   client.count("store.widgets.purchased", order.items.length);
-   * 
+   *
    * @param key  Metric key
    * @param num  Number of things (Default is 1)
    * @param opts Extra options
@@ -122,14 +122,14 @@ export class StatsDClient {
   /**
    * Sends a "timing" metric, typically measured in milliseconds. The remote StatsD server will usually calculate other
    * metrics based on these values. These metrics can include things like: min, max, average, mean90, etc...
-   * 
+   *
    * While this metric type was originally intended only for timing measurements, it can really be used for any value
    * where things like min, max, mean90, etc... would be useful.
-   * 
+   *
    * @example
    *   // Keep track of route response times:
    *   client.timing("routes.get_api_resource.ok", Date.now() - start);
-   * 
+   *
    * @param key Metric key
    * @param ms  Measurement
    * @param opts Extra options
@@ -159,15 +159,15 @@ export class StatsDClient {
    * keep gauges in memory, and will keep using them if a new value wasn't sent. Use this to track values that are
    * absolutely true, at this point-in-time. This could include things like "number of items in a db table", or "bytes
    * remaining in the main disk partition." Things like that.
-   * 
+   *
    * @example
    *   // Keep track of server disk usage:
    *   client.gauge(`servers.${await Deno.hostname()}.diskPercent`, await getDiskPercent());
-   * 
+   *
    * @example
    *   // Keep track of items in a db table:
    *   client.gauge("database.main.users", await userTable.count());
-   * 
+   *
    * @param key   Metric key
    * @param value Measurement
    * @param opts  Extra options
@@ -195,15 +195,15 @@ export class StatsDClient {
   /**
    * Sends a relative "gauge" metric. A _relative_ gauge metric may reference a gauge value (an absolute measurement)
    * but we aren't sending that exact measurement right now. We're just sending an adjustment value.
-   * 
+   *
    * @example
    *   // Adjust the total asset size after an upload:
    *   client.adjustGauge("assets.size.overall", asset.byteLength);
-   * 
+   *
    * @example
    *   // Adjust the total number of users after a cancellation:
    *   client.adjustGauge("users.count", -1);
-   * 
+   *
    * @param key   Metric key
    * @param delta Adjustment value
    * @param opts  Extra options
@@ -231,11 +231,11 @@ export class StatsDClient {
   /**
    * Sends a "set" metric. A set metric tracks the number of distinct values seen in StatsD over time. Use this to track
    * things like the number of disctint users.
-   * 
+   *
    * @example
    *   // Track distinct authenticated users
    *   client.unique("users.distinct", user.id);
-   * 
+   *
    * @param key   Metric key
    * @param value Identifying value
    * @param opts  Extra options
@@ -263,15 +263,15 @@ export class StatsDClient {
   /**
    * Sends a "histogram" metric. A histogram is pretty much the same thing as a timer, but created by datadog, and not
    * compatible with StatsD.
-   * 
+   *
    * I don't get it either.
-   * 
+   *
    * This extension to the StatsD protocol is only available when the Dialect is "datadog". Normal StatsD setups should
    * just use the timer metric.
-   * 
+   *
    * @see Docs https://docs.datadoghq.com/developers/metrics/dogstatsd_metrics_submission/#histogram
    * @deprecated
-   * 
+   *
    * @param key   Metric key
    * @param value Timing value
    * @param opts  Extra options
@@ -299,13 +299,13 @@ export class StatsDClient {
   /**
    * Sends a "distribution" metric. A distribution seems to be functionally equivalent to a timing metric, but has its
    * own page in datadog that has been deprecated.
-   * 
+   *
    * This extension to the StatsD protocol is only available when the Dialect is "datadog". Normal StatsD setups should
    * just use the timer metric.
-   * 
+   *
    * @see Docs https://docs.datadoghq.com/developers/metrics/dogstatsd_metrics_submission/#distribution
    * @deprecated
-   * 
+   *
    * @param key   Metric key
    * @param value Timing value
    * @param opts  Extra options
@@ -332,9 +332,9 @@ export class StatsDClient {
 
   /**
    * Sends an "event" to datadog.
-   * 
+   *
    * This method will only work if the dialect is "datadog".
-   * 
+   *
    * @example
    *   // Send an exception to datadog:
    *   client.event({
@@ -344,7 +344,7 @@ export class StatsDClient {
    *     source: "database",
    *     type: "error",
    *   });
-   * 
+   *
    * @param event Event options
    */
   event(event: EventOpts) {
@@ -371,9 +371,9 @@ export class StatsDClient {
 
   /**
    * Sends a "service check" to datadog.
-   * 
+   *
    * This method will only work if the dialect is "datadog".
-   * 
+   *
    * @example
    *   // Send a critical redis outage to datadog.
    *   client.serviceCheck({
@@ -382,7 +382,7 @@ export class StatsDClient {
    *     tags: { env: "production" },
    *     message: "Redis connection timed out after 10s"
    *   });
-   * 
+   *
    * @param check Service check options
    */
   serviceCheck(check: ServiceCheckOpts) {
@@ -406,7 +406,7 @@ export class StatsDClient {
 
   /**
    * Will flush all pending metrics, and close all open sockets.
-   * 
+   *
    * Any attempts to use this client after close() should error.
    */
   async close(): Promise<void> {

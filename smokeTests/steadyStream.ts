@@ -3,9 +3,9 @@ import { log } from "../testDeps.ts";
 
 /*
  * Envirnoment: StatsD server, running in docker.
- * 
+ *
  * `deno --unstable run --allow-net --allow-env steadyStream.ts`
- * 
+ *
  * Writes a slow, steady stream of events, to test outages.
  */
 

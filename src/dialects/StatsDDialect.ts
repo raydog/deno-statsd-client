@@ -12,8 +12,8 @@ export class StatsDDialect implements Dialect {
   /**
    * StatsD only asserts an ASCII encoding for socket-based protocols, so for UDP connections, allow UTF-8, and...
    * it might work?
-   * 
-   * @param isUDP 
+   *
+   * @param isUDP
    */
   constructor(isUDP: boolean) {
     this.#isUDP = isUDP;

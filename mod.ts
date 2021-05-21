@@ -1,10 +1,9 @@
 /**
  * StatsD client library
- * 
+ *
  * @license MIT
  * @module
  */
-
 
 export type {
   LibConfig,

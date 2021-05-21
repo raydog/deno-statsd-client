@@ -16,17 +16,17 @@ export interface ServiceCheckOpts {
 
   /**
    * Timestamp for the service check.
-   * 
+   *
    * Default is "now", so only supply this if submitting a service check retroactively.
    */
   time?: Date;
 
   /**
    * The hostname for this service check.
-   * 
+   *
    * If omitted, we'll use `Deno.hostname()` if the current process has environment permissions. Else the param will not
    * be sent with the event. If you wish to omit hostname from the event, use the value `false`.
-   * 
+   *
    * @example "api-server-42"
    */
   host?: string;
