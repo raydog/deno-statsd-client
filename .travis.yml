@@ -3,7 +3,7 @@ os:
   # - osx
   # Note: osx seems to exhibit some of the strange lockups that I saw in github's actions.
   # Namely, that UDP packets fail to send, causing test timeouts. Research more later.
-dist: xenial
+dist: bionic
 
 # Deno not officially supported, so fall back on a generic image, and install ourselves:
 language: minimal
